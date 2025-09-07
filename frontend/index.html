@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriChain - Supply Chain Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f0f4f8;
+        }
+        .card {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.3s ease-in-out;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4ade80;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <div class="container mx-auto max-w-4xl space-y-8">
+        <!-- Main Application Card -->
+        <div class="card w-full">
+            <h1 class="text-3xl font-bold text-center text-gray-800 mb-2">AgriChain Explorer</h1>
+            <p class="text-center text-gray-600 mb-6">A transparent view of the on-chain supply chain data</p>
+
+            <div class="space-y-2 mb-6 text-center">
+                <p class="text-gray-700">Contract Address:</p>
+                <p class="font-mono text-sm text-lime-700 break-all" id="contract-address-display">Loading...</p>
+            </div>
+
+            <div class="divider my-8"></div>
+
+            <!-- Products Section -->
+            <div>
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Products</h2>
+                <div id="products-list" class="space-y-4">
+                    <p class="text-gray-500 text-center">Loading products...</p>
+                </div>
+            </div>
+
+            <div class="divider my-8"></div>
+
+            <!-- Distributions Section -->
+            <div>
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Distributions</h2>
+                <div id="distributions-list" class="space-y-4">
+                    <p class="text-gray-500 text-center">Loading distributions...</p>
+                </div>
+            </div>
+
+            <!-- Message Box -->
+            <div id="message-box" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center p-4">
+                <div class="bg-white rounded-lg p-6 max-w-sm w-full shadow-lg text-center">
+                    <p id="message-text" class="text-lg font-medium text-gray-800 mb-4"></p>
+                    <button id="close-message-btn" class="bg-lime-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-lime-700 transition-colors duration-200 w-full">OK</button>
+                </div>
+            </div>
+
+            <!-- Loading Overlay -->
+            <div id="loading-overlay" class="loading-overlay">
+                <div class="loading-spinner"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.ethers.io/5.7.2/ethers.min.js"></script>
+    <script>
+        const rpcUrl = "https://eth-sepolia.g.alchemy.com/v2/yUBwrEu_H0SwM10zgNDjo";
+        const contractAddress = "0x97e7b81433D045a0CeBb59B7Bb4B0ed0bBEF0e08";
+        
+        // This ABI is a placeholder. You must copy the ABI from your SupplyChainRoles.json file.
+        const contractABI = [
+    {
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "distributionId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "distributor",
+          "type": "address"
+        }
+      ],
+      "name": "DistributionAdded",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "productId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "farmer",
+          "type": "address"
+        }
+      ],
+      "name": "ProductAdded",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "enum SupplyChainRoles.Role",
+          "name": "role",
+          "type": "uint8"
+        }
+      ],
+      "name": "RoleApproved",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "enum SupplyChainRoles.Role",
+          "name": "role",
+          "type": "uint8"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "id",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "ip",
+          "type": "string"
+        }
+      ],
+      "name": "RoleRequested",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "fromPlace",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "toPlace",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "price",
+          "type": "uint256"
+        }
+      ],
+      "name": "addDistribution",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "cropMonth",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "daysToFinish",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "price",
+          "type": "uint256"
+        }
+      ],
+      "name": "addProduct",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "admin",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "userAddr",
+          "type": "address"
+        },
+        {
+          "internalType": "enum SupplyChainRoles.Role",
+          "name": "intendedRole",
+          "type": "uint8"
+        }
+      ],
+      "name": "approveRole",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "distributionCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "distributions",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "id",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "fromPlace",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "toPlace",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "price",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "distributorAddr",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "addedAt",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "distributorCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "farmerCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "distId",
+          "type": "uint256"
+        }
+      ],
+      "name": "getDistribution",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "id",
+              "type": "uint256"
+            },
+            {
+              "internalType": "string",
+              "name": "fromPlace",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "toPlace",
+              "type": "string"
+            },
+            {
+              "internalType": "uint256",
+              "name": "price",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "distributorAddr",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "addedAt",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct SupplyChainRoles.Distribution",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getPendingDistributors",
+      "outputs": [
+        {
+          "internalType": "address[]",
+          "name": "",
+          "type": "address[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getPendingFarmers",
+      "outputs": [
+        {
+          "internalType": "address[]",
+          "name": "",
+          "type": "address[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "productId",
+          "type": "uint256"
+        }
+      ],
+      "name": "getProduct",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "id",
+              "type": "uint256"
+            },
+            {
+              "internalType": "string",
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "cropMonth",
+              "type": "string"
+            },
+            {
+              "internalType": "uint256",
+              "name": "daysToFinish",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "price",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "farmerAddr",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "addedAt",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct SupplyChainRoles.Product",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "userAddr",
+          "type": "address"
+        }
+      ],
+      "name": "getUserInfo",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "enum SupplyChainRoles.Role",
+              "name": "role",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bool",
+              "name": "requested",
+              "type": "bool"
+            },
+            {
+              "internalType": "string",
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "ip",
+              "type": "string"
+            },
+            {
+              "internalType": "uint256",
+              "name": "appliedAt",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bool",
+              "name": "exists",
+              "type": "bool"
+            }
+          ],
+          "internalType": "struct SupplyChainRoles.UserInfo",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "pendingDistributors",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "pendingFarmers",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "productCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "products",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "id",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "cropMonth",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "daysToFinish",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "price",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "farmerAddr",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "addedAt",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "enum SupplyChainRoles.Role",
+          "name": "role",
+          "type": "uint8"
+        },
+        {
+          "internalType": "string",
+          "name": "id",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "ip",
+          "type": "string"
+        }
+      ],
+      "name": "requestRole",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "users",
+      "outputs": [
+        {
+          "internalType": "enum SupplyChainRoles.Role",
+          "name": "role",
+          "type": "uint8"
+        },
+        {
+          "internalType": "bool",
+          "name": "requested",
+          "type": "bool"
+        },
+        {
+          "internalType": "string",
+          "name": "id",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "ip",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "appliedAt",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "exists",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ];
+
+        // UI Elements
+        const productsListDiv = document.getElementById('products-list');
+        const distributionsListDiv = document.getElementById('distributions-list');
+        const contractAddressDisplay = document.getElementById('contract-address-display');
+        const messageBox = document.getElementById('message-box');
+        const messageText = document.getElementById('message-text');
+        const closeMessageBtn = document.getElementById('close-message-btn');
+        const loadingOverlay = document.getElementById('loading-overlay');
+
+        // Global variables for ethers
+        let provider, contract;
+
+        // Helper functions
+        function showLoading() {
+            loadingOverlay.style.opacity = '1';
+            loadingOverlay.style.pointerEvents = 'auto';
+        }
+
+        function hideLoading() {
+            loadingOverlay.style.opacity = '0';
+            loadingOverlay.style.pointerEvents = 'none';
+        }
+
+        function showMessage(text) {
+            messageText.textContent = text;
+            messageBox.classList.remove('hidden');
+        }
+
+        closeMessageBtn.onclick = () => {
+            messageBox.classList.add('hidden');
+        };
+
+        // Main logic
+        async function init() {
+            showLoading();
+            contractAddressDisplay.textContent = contractAddress;
+            
+            try {
+                // Connect to the public RPC provider
+                provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+                contract = new ethers.Contract(contractAddress, contractABI, provider);
+
+                await fetchAndDisplayProducts();
+                await fetchAndDisplayDistributions();
+            } catch (error) {
+                console.error("Initialization error:", error);
+                showMessage("Failed to connect to the blockchain. Check your RPC URL and contract address.");
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function fetchAndDisplayProducts() {
+            productsListDiv.innerHTML = '';
+            try {
+                const productCount = await contract.productCount();
+                if (productCount.isZero()) {
+                    productsListDiv.innerHTML = '<p class="text-gray-500 text-center">No products found on the blockchain.</p>';
+                    return;
+                }
+
+                for (let i = 1; i <= productCount; i++) {
+                    const product = await contract.getProduct(i);
+                    if (product.id.toString() !== '0') {
+                        const productDiv = document.createElement('div');
+                        productDiv.classList.add('bg-gray-50', 'p-4', 'rounded-lg', 'shadow-sm');
+                        const productPriceEth = ethers.utils.formatEther(product.price);
+                        productDiv.innerHTML = `
+                            <p class="font-semibold text-gray-800">${product.name} (ID: ${product.id})</p>
+                            <p class="text-sm text-gray-600">Added by: <span class="font-mono text-xs">${product.farmerAddr}</span></p>
+                            <p class="text-sm text-gray-600">Crop Month: ${product.cropMonth}</p>
+                            <p class="text-sm text-gray-600">Days to Finish: ${product.daysToFinish}</p>
+                            <p class="text-sm text-gray-600">Price: ${productPriceEth} ETH</p>
+                        `;
+                        productsListDiv.appendChild(productDiv);
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching products:", error);
+                productsListDiv.innerHTML = '<p class="text-red-500 text-center">Failed to load products.</p>';
+            }
+        }
+
+        async function fetchAndDisplayDistributions() {
+            distributionsListDiv.innerHTML = '';
+            try {
+                const distributionCount = await contract.distributionCount();
+                if (distributionCount.isZero()) {
+                    distributionsListDiv.innerHTML = '<p class="text-gray-500 text-center">No distributions found on the blockchain.</p>';
+                    return;
+                }
+
+                for (let i = 1; i <= distributionCount; i++) {
+                    const distribution = await contract.getDistribution(i);
+                    if (distribution.id.toString() !== '0') {
+                        const distributionDiv = document.createElement('div');
+                        distributionDiv.classList.add('bg-gray-50', 'p-4', 'rounded-lg', 'shadow-sm');
+                        const distroPriceEth = ethers.utils.formatEther(distribution.price);
+                        distributionDiv.innerHTML = `
+                            <p class="font-semibold text-gray-800">Route ID: ${distribution.id}</p>
+                            <p class="text-sm text-gray-600">Added by: <span class="font-mono text-xs">${distribution.distributorAddr}</span></p>
+                            <p class="text-sm text-gray-600">Route: ${distribution.fromPlace} to ${distribution.toPlace}</p>
+                            <p class="text-sm text-gray-600">Price: ${distroPriceEth} ETH</p>
+                        `;
+                        distributionsListDiv.appendChild(distributionDiv);
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching distributions:", error);
+                distributionsListDiv.innerHTML = '<p class="text-red-500 text-center">Failed to load distributions.</p>';
+            }
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>

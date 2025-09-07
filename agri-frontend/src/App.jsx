@@ -1,65 +1,118 @@
-import { useState } from "react";
-import { ethers } from "ethers";
-import { QRCodeSVG } from 'qrcode.react';
-import { CONTRACT_ADDRESS, CONTRACT_ABI } from "./Contract";
+// src/App.jsx
+import React from "react";
+
+import { useEffect, useRef, useState } from "react";
+import AdminDashboard from "./components/AdminDashboard";
+import FarmerDashboard from "./components/FarmerDashboard";
+import DistributorDashboard from "./components/DistributorDashboard";
+import { getProviderAndReadContract } from "./Contract.js";
 
 function App() {
-  const [lotId, setLotId] = useState(null);
-  const [lotData, setLotData] = useState(null);
+  const [account, setAccount] = useState(null);
+  const [roleInfo, setRoleInfo] = useState(null); // UserInfo struct from contract
+  const [isAdmin, setIsAdmin] = useState(false);
+  const refreshRef = useRef(null); // allow child to set refresh function
 
-  // connect to MetaMask
-  async function getContract() {
-    if (!window.ethereum) {
-      alert("MetaMask not detected");
-      return null;
+  const connect = async () => {
+    try {
+      if (!window.ethereum) return alert("Install MetaMask");
+      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+      setAccount(accounts[0]);
+    } catch (err) {
+      console.error("connect error:", err);
     }
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    const signer = await provider.getSigner();
-    return new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-  }
+  };
 
-  // create a new lot
-  async function createLot(crop, qty, price) {
-    const contract = await getContract();
-    const tx = await contract.createLot(crop, qty, price);
-    const receipt = await tx.wait();
-    const newLotId = receipt.logs[0].args[0].toString(); // assuming your event returns lotId
-    setLotId(newLotId);
-  }
+  const loadUserRole = async (acct) => {
+    try {
+      const { contract } = await getProviderAndReadContract();
+      const adminAddr = await contract.admin();
+      setIsAdmin(adminAddr.toLowerCase() === acct.toLowerCase());
 
-  // get lot details
-  async function fetchLot(id) {
-    const contract = await getContract();
-    const data = await contract.getLot(id);
-    setLotData(data);
-  }
+      const userInfo = await contract.getUserInfo(acct);
+      // userInfo is a tuple: (role, requested, id, ip, appliedAt, exists) - depends on ABI order
+      setRoleInfo({
+        role: Number(userInfo.role),
+        requested: userInfo.requested,
+        id: userInfo.id,
+        ip: userInfo.ip,
+        appliedAt: Number(userInfo.appliedAt),
+        exists: userInfo.exists
+      });
+    } catch (err) {
+      console.error("loadUserRole error:", err);
+      setRoleInfo(null);
+    }
+  };
+
+  useEffect(() => {
+    // auto connect if account already available
+    async function init() {
+      if (!window.ethereum) return;
+      const accounts = await window.ethereum.request({ method: "eth_accounts" });
+      if (accounts && accounts.length) {
+        setAccount(accounts[0]);
+      }
+    }
+    init();
+
+    // listen for account changes
+    window.ethereum?.on("accountsChanged", (accounts) => {
+      setAccount(accounts[0] || null);
+    });
+
+    window.ethereum?.on("chainChanged", () => {
+      window.location.reload();
+    });
+  }, []);
+
+  useEffect(() => {
+    if (account) loadUserRole(account);
+  }, [account]);
+
+  const refreshAll = async () => {
+    if (account) await loadUserRole(account);
+    if (refreshRef.current) await refreshRef.current();
+  };
 
   return (
-    <div className="p-5">
-      <h1 className="text-xl font-bold">Agri Supply Chain</h1>
-
-      {/* Farmer Form */}
-      <h2>Create Lot</h2>
-      <button onClick={() => createLot("Tomato", 100, 20)}>Create Tomato Lot</button>
-
-      {lotId && (
+    <div className="mx-auto max-w-3xl p-6">
+      <header className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Agri Supply Chain</h1>
         <div>
-          <p>New Lot ID: {lotId}</p>
-<QRCodeSVG value={lotId.toString()} />        </div>
-      )}
-
-      {/* Consumer Section */}
-      <h2>Check Lot</h2>
-      <input type="text" onChange={(e) => setLotId(e.target.value)} placeholder="Enter Lot ID" />
-      <button onClick={() => fetchLot(lotId)}>Fetch Lot</button>
-
-      {lotData && (
-        <div>
-          <p>Crop: {lotData[0]}</p>
-          <p>Quantity: {lotData[1].toString()}</p>
-          <p>Base Price: {lotData[2].toString()} ETH</p>
-          <p>Farmer: {lotData[3]}</p>
+          {account ? (
+            <div>
+              <span className="mr-2">Connected: {account.slice(0,6)}...{account.slice(-4)}</span>
+              <button onClick={refreshAll} className="px-2 py-1 bg-gray-200 rounded">Refresh</button>
+            </div>
+          ) : (
+            <button onClick={connect} className="px-3 py-1 bg-blue-600 text-white rounded">Connect Wallet</button>
+          )}
         </div>
+      </header>
+
+      {account ? (
+        <>
+          {isAdmin ? (
+            <AdminDashboard onRefreshRequested={refreshRef} />
+          ) : (
+            <>
+              {/* Non-admin: show only apply options; if approved, show corresponding dashboard */}
+              {roleInfo && roleInfo.role === 1 ? (
+                <FarmerDashboard isApproved={true} />
+              ) : roleInfo && roleInfo.role === 2 ? (
+                <DistributorDashboard isApproved={true} />
+              ) : (
+                <div className="grid gap-4">
+                  <FarmerDashboard isApproved={false} />
+                  <DistributorDashboard isApproved={false} />
+                </div>
+              )}
+            </>
+          )}
+        </>
+      ) : (
+        <div>Please connect your wallet to continue.</div>
       )}
     </div>
   );
