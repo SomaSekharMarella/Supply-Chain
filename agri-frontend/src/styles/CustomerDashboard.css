@@ -1,0 +1,97 @@
+.customer-dashboard {
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #ffffffcc; /* translucent card-like background */
+  border-radius: 18px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+}
+
+.customer-dashboard h2 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #1d1d1f;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.customer-dashboard p {
+  text-align: center;
+  color: #6e6e73;
+  margin-bottom: 2rem;
+}
+
+.customer-dashboard section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  border-radius: 16px;
+  background: #fafafa;
+  border: 1px solid #e5e5ea;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.customer-dashboard section h3 {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #1d1d1f;
+  margin-bottom: 1rem;
+}
+
+/* Data cards */
+.customer-dashboard div {
+  padding: 0.8rem 1rem;
+  margin-bottom: 0.6rem;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #e5e5ea;
+  font-size: 0.95rem;
+  color: #1d1d1f;
+}
+
+/* Buttons */
+.customer-dashboard button {
+  display: inline-block;
+  margin-top: 0.6rem;
+  margin-right: 0.6rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: 12px;
+  background: #159a29; /* Apple blue */
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background 0.25s ease, transform 0.1s ease;
+}
+
+.customer-dashboard button:hover {
+  background: #0063cc;
+}
+
+.customer-dashboard button:active {
+  transform: scale(0.97);
+}
+
+/* Inputs */
+.customer-dashboard input[type="text"],
+.customer-dashboard input[type="number"],
+.customer-dashboard input[type="checkbox"],
+.customer-dashboard select {
+  padding: 0.6rem 1rem;
+  margin: 0.4rem 0.4rem 0.4rem 0;
+  border-radius: 12px;
+  border: 1px solid #d1d1d6;
+  font-size: 0.9rem;
+  background: #ffffff;
+  color: #1d1d1f;
+  outline: none;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+.customer-dashboard input:focus,
+.customer-dashboard select:focus {
+  border-color: #119061;
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+}

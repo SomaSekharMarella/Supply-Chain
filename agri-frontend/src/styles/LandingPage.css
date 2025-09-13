@@ -1,0 +1,52 @@
+/* Reset margin/padding so background fills edge-to-edge */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+  }
+  
+  /* Landing page container */
+  .landing {
+    min-height: 100vh;         /* full height of viewport */
+    width: 100vw;              /* full width */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  
+    background-image: url("../assets/plantsgif.gif"); /* your image */
+    background-size: cover;    /* makes sure it fills */
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed; /* optional: keeps it fixed while scrolling */
+  
+    color: white;
+    text-align: center;
+    font-family: "Playfair Display", Georgia, serif;
+  }
+  .connect-btn {
+    margin-top: 20px;
+    padding: 12px 24px;
+    background-color: #296f54; /* blue */
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  
+  .connect-btn:hover {
+    background-color: #2f8c4b;
+  }
+  .landing-header h1 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+  
+  .landing-main h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+  

@@ -1,72 +1,47 @@
 // src/components/FarmerDashboard.jsx
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { getContract } from "../contract";
+import "../styles/FarmerDashboard.css";
 
 export default function FarmerDashboard({ account }) {
-  const [form, setForm] = useState({
-    cropName: "",
-    cropPeriod: "",
-    daysToHarvest: 0,
-    quantityKg: 0,
-    pricePerKg: 0,
-    location: "",
-    visibility: 1,
-    ipfsHash: "",
-  });
-  const [myProducts, setMyProducts] = useState([]);
+  const [activeTab, setActiveTab] = useState(""); // "" means nothing selected yet
+  const [products, setProducts] = useState([]);
 
   useEffect(() => {
-    loadMyProducts();
+    loadProducts();
   }, []);
 
-  async function loadMyProducts() {
+  async function getContractInstance(withSigner = false) {
+    const res = await getContract(withSigner);
+    return res && res.contract ? res.contract : res;
+  }
+
+  async function loadProducts() {
     try {
-      const contract = await getContract(false);
-      const arr = await contract.getMyProducts(); // uses msg.sender internally
-      // arr are structs; convert numbers to JS numbers for display
-      const mapped = arr.map((p) => ({
-        batchId: Number(p.batchId),
-        cropName: p.cropName,
-        qty: Number(p.quantityKg),
-        pricePerKg: Number(p.pricePerKg),
-        visibility: Number(p.visibility),
-        ipfs: p.ipfsHash,
-        createdAt: Number(p.createdAt),
-        active: p.active,
-      }));
-      setMyProducts(mapped);
+      const contract = await getContractInstance(false);
+      const farmerProducts = await contract.getProductsByFarmer(account);
+      setProducts(farmerProducts);
     } catch (err) {
-      console.error(err);
+      console.error("Error loading products", err);
     }
   }
 
   async function addProduct(e) {
     e.preventDefault();
+    const form = e.target;
+    const crop = form.crop.value;
+    const period = form.period.value;
+    const quantity = form.quantity.value;
+    const price = form.price.value;
+    const location = form.location.value;
+
     try {
-      const contract = await getContract(true);
-      const tx = await contract.addProduct(
-        form.cropName,
-        form.cropPeriod,
-        Number(form.daysToHarvest),
-        Number(form.quantityKg),
-        Number(form.pricePerKg),
-        form.location,
-        Number(form.visibility),
-        form.ipfsHash
-      );
+      const contract = await getContractInstance(true);
+      const tx = await contract.addProduct(crop, period, quantity, price, location);
       await tx.wait();
-      alert("Product added");
-      setForm({
-        cropName: "",
-        cropPeriod: "",
-        daysToHarvest: 0,
-        quantityKg: 0,
-        pricePerKg: 0,
-        location: "",
-        visibility: 1,
-        ipfsHash: "",
-      });
-      loadMyProducts();
+      alert("Product added successfully!");
+      form.reset();
+      loadProducts();
     } catch (err) {
       console.error(err);
       alert("Add product failed: " + (err?.message || err));
@@ -74,54 +49,61 @@ export default function FarmerDashboard({ account }) {
   }
 
   return (
-    <div>
-      <h2>Farmer Dashboard</h2>
-      <p>Farmer: <b>{account}</b></p>
+    <div className="farmer-dashboard">
+      <h2>Farmer Dashboard 🌾</h2>
+      <p>
+        Farmer: <b>{account}</b>
+      </p>
 
-      <section style={{ marginTop: 12 }}>
-        <h3>Add Product / Batch</h3>
-        <form onSubmit={addProduct}>
-          <input placeholder="Crop name" value={form.cropName} onChange={(e) => setForm({...form, cropName: e.target.value})} required />
-          <br />
-          <input placeholder="Crop period (e.g., Jan-Feb)" value={form.cropPeriod} onChange={(e) => setForm({...form, cropPeriod: e.target.value})} />
-          <br />
-          <input placeholder="Days to harvest" type="number" value={form.daysToHarvest} onChange={(e) => setForm({...form, daysToHarvest: e.target.value})} />
-          <br />
-          <input placeholder="Quantity (kg)" type="number" value={form.quantityKg} onChange={(e) => setForm({...form, quantityKg: e.target.value})} required />
-          <br />
-          <input placeholder="Price per kg (wei-like integer)" type="number" value={form.pricePerKg} onChange={(e) => setForm({...form, pricePerKg: e.target.value})} required />
-          <br />
-          <input placeholder="Location" value={form.location} onChange={(e) => setForm({...form, location: e.target.value})} />
-          <br />
-          <label>
-            Visibility:
-            <select value={form.visibility} onChange={(e) => setForm({...form, visibility: e.target.value})}>
-              <option value={1}>Public</option>
-              <option value={0}>Private</option>
-            </select>
-          </label>
-          <br />
-          <input placeholder="IPFS hash (optional)" value={form.ipfsHash} onChange={(e) => setForm({...form, ipfsHash: e.target.value})} />
-          <br />
-          <button type="submit">Add Product</button>
-        </form>
-      </section>
+      {/* Buttons */}
+      <div className="dashboard-buttons">
+        <button
+          className={`dashboard-btn ${activeTab === "add" ? "active" : ""}`}
+          onClick={() => setActiveTab("add")}
+        >
+          🌱 Add Product
+        </button>
 
-      <section style={{ marginTop: 16 }}>
-        <h3>My Products</h3>
-        {myProducts.length === 0 ? <p>No products yet.</p> : myProducts.map((p) => (
-          <div key={p.batchId} style={{ border: "1px solid #ddd", padding: 8, marginBottom: 8 }}>
-            <p><b>BatchId:</b> {p.batchId}</p>
-            <p><b>Name:</b> {p.cropName}</p>
-            <p><b>Qty:</b> {p.qty} kg</p>
-            <p><b>PricePerKg:</b> {p.pricePerKg}</p>
-            <p><b>Visibility:</b> {p.visibility === 1 ? "Public" : "Private"}</p>
-            <p><b>IPFS:</b> {p.ipfs}</p>
-            <p><b>Active:</b> {p.active ? "Yes" : "No"}</p>
-          </div>
-        ))}
-        <button onClick={loadMyProducts}>Refresh</button>
-      </section>
+        <button
+          className={`dashboard-btn ${activeTab === "view" ? "active" : ""}`}
+          onClick={() => setActiveTab("view")}
+        >
+          📦 View My Products
+        </button>
+      </div>
+
+      {/* Conditional Content */}
+      <div className="dashboard-content">
+        {activeTab === "add" && (
+          <form className="product-form" onSubmit={addProduct}>
+            <h3>Add Product / Batch</h3>
+            <input name="crop" placeholder="Crop name" required />
+            <input name="period" placeholder="Crop period (e.g., Jan-Feb)" required />
+            <input name="quantity" type="number" placeholder="Quantity (kg)" required />
+            <input name="price" type="number" placeholder="Price per unit" required />
+            <input name="location" placeholder="Location" required />
+            <button type="submit">Add Product</button>
+          </form>
+        )}
+
+        {activeTab === "view" && (
+          <section className="product-list">
+            <h3>My Products</h3>
+            {products.length === 0 ? (
+              <p>No products added yet.</p>
+            ) : (
+              <ul>
+                {products.map((p, i) => (
+                  <li key={i}>
+                    <b>{p.crop}</b> ({p.period}) - {p.quantity}kg @ {p.price} wei <br />
+                    Location: {p.location}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        )}
+      </div>
     </div>
   );
 }

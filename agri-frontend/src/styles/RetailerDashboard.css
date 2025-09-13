@@ -1,0 +1,122 @@
+.dashboard {
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #ffffffcc; /* translucent glass card */
+  border-radius: 18px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+}
+
+.dashboard-title {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #1d1d1f;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.account {
+  text-align: center;
+  color: #6e6e73;
+  margin-bottom: 2rem;
+}
+
+/* Sections */
+.section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  border-radius: 16px;
+  background: #fafafa;
+  border: 1px solid #e5e5ea;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.section h3 {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #1d1d1f;
+  margin-bottom: 1rem;
+}
+
+/* Card list */
+.card-list {
+  display: grid;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.card {
+  padding: 1rem;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid #e5e5ea;
+  font-size: 0.95rem;
+  color: #1d1d1f;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+}
+
+/* Buttons */
+.btn-primary {
+  display: inline-block;
+  margin-top: 0.6rem;
+  margin-right: 0.6rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: 12px;
+  background: #2bd155; /* iOS blue */
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background 0.25s ease, transform 0.1s ease;
+}
+
+.btn-primary:hover {
+  background: #169d51;
+}
+
+.btn-primary:active {
+  transform: scale(0.97);
+}
+
+/* Forms */
+.form {
+  margin-top: 1rem;
+}
+
+.form input,
+.form select {
+  padding: 0.6rem 1rem;
+  margin: 0.4rem 0.4rem 0.4rem 0;
+  border-radius: 12px;
+  border: 1px solid #d1d1d6;
+  font-size: 0.9rem;
+  background: #ffffff;
+  color: #1d1d1f;
+  outline: none;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form input:focus,
+.form select:focus {
+  border-color: #12673a;
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+}
+
+/* Checkbox */
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.6rem 0;
+  font-size: 0.9rem;
+  color: #1d1d1f;
+}
