@@ -1,8 +1,8 @@
 // src/contract.js
 import { ethers } from "ethers";
-import SupplyChainAbi from "../src/apis/SupplyChain.json"; // your ABI JSON
+import SupplyChainAbi from "../src/apis/SupplyChain.json"; 
 
-export const CONTRACT_ADDRESS = "0x253E1b96308739c870b7B571F90B012dEDF93c68"; // replace with your deployed contract
+export const CONTRACT_ADDRESS = "0xBB25952c2466dC0882CC3a63C787ff29BE07774a";
 
 // Returns contract (with signer if withSigner = true)
 export async function getContract(withSigner = false) {

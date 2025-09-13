@@ -80,14 +80,18 @@ contract SupplyChain is Ownable, ReentrancyGuard {
         uint256 createdAt;
     }
     struct PurchaseRecord {
-        uint256 purchaseId;
-        uint256 unitId;
-        address buyer;
-        address seller;
-        uint256 qtyKg;
-        uint256 pricePerKg;
-        uint256 timestamp;
+    uint256 purchaseId;
+    uint256 unitId;
+    uint256 quantityKg;
+    uint256 pricePerKg;
+    uint256 qtyKg;       // ✅ this line must exist
+    address seller;
+    address buyer;
+    Role sellerRole;   // 👈 new
+    Role buyerRole;    // 👈 new
+    uint256 timestamp;
     }
+
     // -----------------------
     // State variables / counters
     // -----------------------
@@ -218,6 +222,7 @@ contract SupplyChain is Ownable, ReentrancyGuard {
     function getUserInfo(address user) external view returns (UserInfo memory) {
         return users[user];
     }
+    
     // -----------------------
     // Farmer functions
     // -----------------------
@@ -564,30 +569,49 @@ contract SupplyChain is Ownable, ReentrancyGuard {
     // -----------------------
     /// @notice Buy a retail unit (payable)
     function buyRetailUnit(uint256 unitId, uint256 qtyKg) external payable nonReentrant {
-        RetailUnit storage u = retailUnits[unitId];
-        require(u.unitId != 0 && u.available, "SupplyChain: unit not available");
-        require(qtyKg > 0 && qtyKg <= u.quantityKg, "SupplyChain: invalid qty");
-        uint256 total = qtyKg * u.pricePerKg;
-        require(msg.value == total, "SupplyChain: incorrect payment");
-        purchaseCounter++;
-        PurchaseRecord storage pr = purchaseRecords[purchaseCounter];
-        pr.purchaseId = purchaseCounter;
-        pr.unitId = unitId;
-        pr.buyer = msg.sender;
-        pr.seller = u.retailer;
-        pr.qtyKg = qtyKg;
-        pr.pricePerKg = u.pricePerKg;
-        pr.timestamp = block.timestamp;
-        // transfer funds to seller (retailer) or fallback
-        (bool sent, ) = u.retailer.call{value: msg.value}("");
-        if (!sent) {
-            pendingWithdrawals[u.retailer] += msg.value;
-        }
-        // reduce quantity
-        u.quantityKg -= qtyKg;
-        if (u.quantityKg == 0) u.available = false;
-        emit UnitPurchased(pr.purchaseId, unitId, msg.sender, u.retailer, qtyKg, u.pricePerKg, block.timestamp);
+    RetailUnit storage u = retailUnits[unitId];
+    require(u.unitId != 0 && u.available, "SupplyChain: unit not available");
+    require(qtyKg > 0 && qtyKg <= u.quantityKg, "SupplyChain: invalid qty");
+
+    uint256 total = qtyKg * u.pricePerKg;
+    require(msg.value == total, "SupplyChain: incorrect payment");
+
+    purchaseCounter++;
+    PurchaseRecord storage pr = purchaseRecords[purchaseCounter];
+
+    pr.purchaseId = purchaseCounter;
+    pr.unitId = unitId;
+    pr.qtyKg = qtyKg;
+    pr.pricePerKg = u.pricePerKg;
+    pr.seller = u.retailer;
+    pr.buyer = msg.sender;
+    pr.sellerRole = users[u.retailer].role;  // 👈 added
+    pr.buyerRole = users[msg.sender].role;   // 👈 added
+    pr.timestamp = block.timestamp;
+
+    // transfer funds to seller (retailer)
+    (bool sent, ) = u.retailer.call{value: msg.value}("");
+    if (!sent) {
+        pendingWithdrawals[u.retailer] += msg.value;
     }
+
+    // reduce quantity
+    u.quantityKg -= qtyKg;
+    if (u.quantityKg == 0) {
+        u.available = false;
+    }
+
+    emit UnitPurchased(
+        pr.purchaseId,
+        unitId,
+        msg.sender,
+        u.retailer,
+        qtyKg,
+        u.pricePerKg,
+        block.timestamp
+    );
+}
+
     /// @notice Get purchase history for a user (buyer or seller)
     function getPurchaseHistory(address user) external view returns (PurchaseRecord[] memory) {
         uint256 total = purchaseCounter;
