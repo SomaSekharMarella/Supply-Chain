@@ -12,6 +12,33 @@ import DistributorDashboard from "./components/DistributorDashboard";
 import RetailerDashboard from "./components/RetailerDashboard";
 import CustomerDashboard from "./components/CustomerDashboard";
 
+function GoogleTranslate() {
+  useEffect(() => {
+    const addScript = document.createElement("script");
+    addScript.src =
+      "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+    document.body.appendChild(addScript);
+
+    window.googleTranslateElementInit = () => {
+      new window.google.translate.TranslateElement(
+        {
+          pageLanguage: "en",
+          includedLanguages: "hi,bn,te,mr,ta,ur,gu,kn,or,pa,ml", // Indian languages only
+          layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
+        },
+        "google_translate_element"
+      );
+    };
+  }, []);
+
+  return (
+    <div
+      id="google_translate_element"
+      style={{ position: "fixed", top: 10, right: 10, zIndex: 1000 }}
+    />
+  );
+}
+
 function App() {
   const [account, setAccount] = useState("");
   const [roleId, setRoleId] = useState(0);
@@ -159,6 +186,7 @@ function App() {
 
   return (
     <div className="app-container">
+      <GoogleTranslate />
       <header className="header">
         <h1 className="title"> Agri Supply Chain 🌱</h1>
         {loading ? (

@@ -96,7 +96,7 @@ export default function FarmerDashboard({ account }) {
             <input name="crop" placeholder="Crop name" required />
             <input name="period" placeholder="Crop period (e.g., Jan-Feb)" required />
             <input name="days" type="number" placeholder="Days to harvest" required />
-            <input name="quantity" type="number" placeholder="Quantity (kg)" required />
+            <input name="quantity" type="number" placeholder="Quantity (tons)" required />
             <input name="price" type="number" placeholder="Price per Kg" required />
             <input name="location" placeholder="Location" required />
             <select name="visibility" required>
