@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { ethers } from "ethers";
 import { getContract } from "./contract"; // make sure path is correct
 
-import "./App.css"; // ✅ add global Apple-like styling
+import "./App.css"; 
 
 import LandingPage from "./components/LandingPage";
 import AdminDashboard from "./components/AdminDashboard";
