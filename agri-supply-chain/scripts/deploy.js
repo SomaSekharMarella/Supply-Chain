@@ -1,17 +1,53 @@
 const hre = require("hardhat");
 
+/**
+ * @title SupplyChain Deployment Script
+ * @notice Deploys the SupplyChain contract and logs deployment information
+ * @dev Includes proper error handling and deployment verification
+ */
 async function main() {
-  const SupplyChain = await hre.ethers.getContractFactory("SupplyChain");
-  const supplyChain = await SupplyChain.deploy();
+  console.log("🚀 Starting SupplyChain deployment...");
+  
+  try {
+    // Get the contract factory
+    const SupplyChain = await hre.ethers.getContractFactory("SupplyChain");
+    console.log("📋 Contract factory loaded successfully");
 
-  // Wait for deployment to complete
-  await supplyChain.waitForDeployment();
+    // Deploy the contract
+    console.log("⏳ Deploying contract...");
+    const supplyChain = await SupplyChain.deploy();
 
-  console.log("✅ SupplyChain deployed to:", await supplyChain.getAddress());
+    // Wait for deployment to complete
+    await supplyChain.waitForDeployment();
+    const contractAddress = await supplyChain.getAddress();
+
+    console.log("✅ SupplyChain deployed successfully!");
+    console.log("📍 Contract Address:", contractAddress);
+    console.log("🌐 Network:", hre.network.name);
+    
+    // Verify deployment by calling a view function
+    const owner = await supplyChain.owner();
+    console.log("👤 Contract Owner:", owner);
+    
+    // Log gas estimation for future reference
+    const deploymentTx = await supplyChain.deploymentTransaction();
+    if (deploymentTx) {
+      console.log("⛽ Gas Used:", deploymentTx.gasLimit?.toString() || "Unknown");
+    }
+
+  } catch (error) {
+    console.error("❌ Deployment failed:", error);
+    throw error;
+  }
 }
 
-// Run with: npx hardhat run scripts/deploy.js --network sepolia
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+// Execute deployment with proper error handling
+main()
+  .then(() => {
+    console.log("🎉 Deployment completed successfully!");
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error("💥 Deployment failed:", error);
+    process.exitCode = 1;
+  });

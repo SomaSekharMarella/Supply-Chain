@@ -1,10 +1,16 @@
-// src/App.jsx
+/**
+ * @fileoverview Main App component for Supply Chain Management System
+ * @description Handles wallet connection, role management, and dashboard routing
+ * @author Supply Chain Management Team
+ */
+
 import React, { useEffect, useState } from "react";
 import { ethers } from "ethers";
-import { getContract } from "./contract"; // make sure path is correct
+import { getContract, getContractInstance } from "./Contract";
 
-import "./App.css"; 
+import "./App.css";
 
+// Dashboard Components
 import LandingPage from "./components/LandingPage";
 import AdminDashboard from "./components/AdminDashboard";
 import FarmerDashboard from "./components/FarmerDashboard";
@@ -12,39 +18,19 @@ import DistributorDashboard from "./components/DistributorDashboard";
 import RetailerDashboard from "./components/RetailerDashboard";
 import CustomerDashboard from "./components/CustomerDashboard";
 
-function GoogleTranslate() {
-  useEffect(() => {
-    const addScript = document.createElement("script");
-    addScript.src =
-      "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
-    document.body.appendChild(addScript);
 
-    window.googleTranslateElementInit = () => {
-      new window.google.translate.TranslateElement(
-        {
-          pageLanguage: "en",
-          includedLanguages: "hi,bn,te,mr,ta,ur,gu,kn,or,pa,ml", // Indian languages only
-          layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
-        },
-        "google_translate_element"
-      );
-    };
-  }, []);
-
-  return (
-    <div
-      id="google_translate_element"
-      style={{ position: "fixed", top: 10, right: 10, zIndex: 1000 }}
-    />
-  );
-}
-
+/**
+ * @description Main App component
+ * @returns {JSX.Element} The main application component
+ */
 function App() {
+  // State management
   const [account, setAccount] = useState("");
   const [roleId, setRoleId] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(false);
   const [viewAsCustomer, setViewAsCustomer] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (window.ethereum) {
@@ -71,40 +57,54 @@ function App() {
     // eslint-disable-next-line
   }, []);
 
-  async function getContractInstance(withSigner = false) {
-    const res = await getContract(withSigner);
-    return res && res.contract ? res.contract : res;
-  }
 
+  /**
+   * @description Handle wallet connection with improved error handling
+   */
   async function handleConnect() {
     try {
       setLoading(true);
+      setError("");
+      
       if (!window.ethereum) {
-        alert("MetaMask not found. Please install it.");
-        return;
+        throw new Error("MetaMask not found. Please install MetaMask to continue.");
       }
+      
       const provider = new ethers.BrowserProvider(window.ethereum);
-      const accs = await provider.send("eth_requestAccounts", []);
-      if (accs && accs.length > 0) {
-        setAccount(accs[0]);
-        await fetchRole(accs[0]);
+      const accounts = await provider.send("eth_requestAccounts", []);
+      
+      if (accounts && accounts.length > 0) {
+        setAccount(accounts[0]);
+        await fetchRole(accounts[0]);
+      } else {
+        throw new Error("No accounts found. Please connect your wallet.");
       }
     } catch (err) {
-      console.error("connect failed:", err);
+      console.error("Connection failed:", err);
+      setError(err.message || "Failed to connect wallet");
     } finally {
       setLoading(false);
     }
   }
 
+  /**
+   * @description Fetch user role from smart contract
+   * @param {string} address - User's wallet address
+   */
   async function fetchRole(address) {
     try {
+      setError("");
       const contract = await getContractInstance(false);
-      if (!contract) throw new Error("Contract not available");
+      if (!contract) {
+        throw new Error("Contract not available");
+      }
 
+      // Check if user is admin (contract owner)
       let ownerAddress = null;
       try {
         ownerAddress = (await contract.owner()).toString();
       } catch {
+        // Fallback for different contract versions
         try {
           ownerAddress = (await contract.admin()).toString();
         } catch {
@@ -115,36 +115,51 @@ function App() {
       const lowerAddr = address?.toLowerCase();
       if (ownerAddress && lowerAddr && ownerAddress.toLowerCase() === lowerAddr) {
         setIsAdmin(true);
-        setRoleId(5);
+        setRoleId(5); // Admin role
         setViewAsCustomer(false);
         return;
       } else {
         setIsAdmin(false);
       }
 
-      let info = null;
+      // Get user info from contract
+      let userInfo = null;
       try {
-        info = await contract.getUserInfo(address);
+        userInfo = await contract.getUserInfo(address);
       } catch (err) {
         console.warn("getUserInfo failed:", err?.message || err);
-        info = null;
+        userInfo = null;
       }
 
-      if (info) {
-        setRoleId(Number(info.role || 0));
+      if (userInfo) {
+        setRoleId(Number(userInfo.role || 0));
       } else {
-        setRoleId(0);
+        setRoleId(0); // No role
       }
       setViewAsCustomer(false);
     } catch (err) {
-      console.error("Error fetching role", err);
+      console.error("Error fetching role:", err);
+      setError("Failed to fetch user role: " + (err.message || err));
       setIsAdmin(false);
       setRoleId(0);
     }
   }
 
+  /**
+   * @description Render appropriate dashboard based on user role
+   * @returns {JSX.Element} Dashboard component
+   */
   function renderDashboard() {
-    if (!account) return <p>Please connect MetaMask (Sepolia) to continue.</p>;
+    if (!account) {
+      return (
+        <div className="connection-prompt">
+          <p>Please connect MetaMask (Sepolia network) to continue.</p>
+          <button onClick={handleConnect} className="connect-button">
+            Connect Wallet
+          </button>
+        </div>
+      );
+    }
 
     if (isAdmin) {
       return <AdminDashboard account={account} />;
@@ -156,7 +171,7 @@ function App() {
 
     switch (roleId) {
       case 1:
-        return <FarmerDashboard account={account} />;
+        return <FarmerDashboard account={account} roleId={roleId} />;
       case 2:
         return <DistributorDashboard account={account} />;
       case 3:
@@ -168,7 +183,7 @@ function App() {
           <div className="apply-role-container">
             <p className="address">Your address: {account}</p>
             <p className="note">
-              You don’t have a role yet. Request Farmer/Distributor or view as Customer:
+              You don't have a role yet. Request Farmer/Distributor or view as Customer:
             </p>
             <ApplyRoleSimple
               account={account}
@@ -180,23 +195,33 @@ function App() {
     }
   }
 
+  // Show landing page if no account connected
   if (!account) {
     return <LandingPage onConnect={handleConnect} />;
   }
 
   return (
     <div className="app-container">
-      <GoogleTranslate />
       <header className="header">
-        <h1 className="title"> Agri Supply Chain 🌱</h1>
-        {loading ? (
-          <p className="wallet-status">Loading...</p>
-        ) : (
-          <p className="wallet-status">
-            Connected wallet: <b>{account || "Not connected"}</b>
-            {isAdmin ? " (Admin)" : ""}
-          </p>
-        )}
+        <h1 className="title">🌱 Agri Supply Chain Management</h1>
+        <div className="wallet-info">
+          {loading ? (
+            <p className="wallet-status">Loading...</p>
+          ) : (
+            <p className="wallet-status">
+              Connected wallet: <b>{account || "Not connected"}</b>
+              {isAdmin ? " (Admin)" : ""}
+            </p>
+          )}
+          {error && (
+            <div className="error-message">
+              <p>⚠️ {error}</p>
+              <button onClick={() => setError("")} className="dismiss-error">
+                Dismiss
+              </button>
+            </div>
+          )}
+        </div>
       </header>
       <main className="dashboard">{renderDashboard()}</main>
     </div>
@@ -205,38 +230,51 @@ function App() {
 
 export default App;
 
-/* ---------------------------
-   ApplyRoleSimple component
-   ---------------------------- */
+/**
+ * @description Component for requesting roles or viewing as customer
+ * @param {Object} props - Component props
+ * @param {Function} props.onViewAsCustomer - Callback for viewing as customer
+ * @param {Function} props.refreshRole - Callback to refresh user role
+ * @returns {JSX.Element} Role application component
+ */
 function ApplyRoleSimple({ onViewAsCustomer, refreshRole }) {
   const [role, setRole] = useState("1");
   const [idHash, setIdHash] = useState("");
   const [meta, setMeta] = useState("");
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
 
+  /**
+   * @description Handle role request submission
+   */
   async function handleRequest() {
     try {
+      setError("");
+      
       if (role === "4") {
         if (onViewAsCustomer) onViewAsCustomer();
         return;
       }
+      
       if (role === "3") {
-        alert(
-          "To become a Retailer: buy a pack from a Distributor and create a buy request with wantsRetailer=true."
-        );
+        setError("To become a Retailer: buy a pack from a Distributor and create a buy request with wantsRetailer=true.");
         return;
       }
 
       setBusy(true);
-      const contract = await getContract(true);
-      const contractInstance = contract && contract.contract ? contract.contract : contract;
-      const tx = await contractInstance.requestRole(Number(role), idHash || "", meta || "");
+      const contract = await getContractInstance(true);
+      const tx = await contract.requestRole(Number(role), idHash || "", meta || "");
       await tx.wait();
-      alert("Role requested on-chain. Wait for Admin approval.");
+      
+      alert("✅ Role requested successfully! Wait for Admin approval.");
       if (refreshRole) await refreshRole();
+      
+      // Reset form
+      setIdHash("");
+      setMeta("");
     } catch (err) {
       console.error("requestRole failed:", err);
-      alert("Failed to request role: " + (err?.reason || err?.message || String(err)));
+      setError("Failed to request role: " + (err?.reason || err?.message || String(err)));
     } finally {
       setBusy(false);
     }
@@ -245,27 +283,57 @@ function ApplyRoleSimple({ onViewAsCustomer, refreshRole }) {
   return (
     <div className="apply-role">
       <h3>Request Role / View as Customer</h3>
-      <label>
-        Role:
-        <select value={role} onChange={(e) => setRole(e.target.value)}>
-          <option value="1">Farmer (requires Admin approval)</option>
-          <option value="2">Distributor (requires Admin approval)</option>
-          <option value="3">Retailer (via distributor buy request)</option>
-          <option value="4">Customer (no approval)</option>
+      
+      {error && (
+        <div className="error-message">
+          <p>⚠️ {error}</p>
+          <button onClick={() => setError("")} className="dismiss-error">
+            Dismiss
+          </button>
+        </div>
+      )}
+      
+      <div className="form-group">
+        <label htmlFor="role-select">
+          Select Role:
+        </label>
+        <select 
+          id="role-select"
+          value={role} 
+          onChange={(e) => setRole(e.target.value)}
+          className="role-select"
+        >
+          <option value="1">🌾 Farmer (requires Admin approval)</option>
+          <option value="2">📦 Distributor (requires Admin approval)</option>
+          <option value="3">🏪 Retailer (via distributor buy request)</option>
+          <option value="4">🛒 Customer (no approval)</option>
         </select>
-      </label>
-      <input
-        placeholder="idHash (optional)"
-        value={idHash}
-        onChange={(e) => setIdHash(e.target.value)}
-      />
-      <input
-        placeholder="meta (optional)"
-        value={meta}
-        onChange={(e) => setMeta(e.target.value)}
-      />
-      <button onClick={handleRequest} disabled={busy}>
-        {busy ? "Processing..." : role === "4" ? "View as Customer" : "Request Role"}
+      </div>
+      
+      <div className="form-group">
+        <input
+          placeholder="ID Hash (optional)"
+          value={idHash}
+          onChange={(e) => setIdHash(e.target.value)}
+          className="form-input"
+        />
+      </div>
+      
+      <div className="form-group">
+        <input
+          placeholder="Metadata (optional)"
+          value={meta}
+          onChange={(e) => setMeta(e.target.value)}
+          className="form-input"
+        />
+      </div>
+      
+      <button 
+        onClick={handleRequest} 
+        disabled={busy}
+        className={`submit-button ${busy ? 'loading' : ''}`}
+      >
+        {busy ? "⏳ Processing..." : role === "4" ? "🛒 View as Customer" : "📝 Request Role"}
       </button>
     </div>
   );

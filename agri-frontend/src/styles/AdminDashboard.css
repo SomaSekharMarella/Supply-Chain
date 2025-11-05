@@ -1,124 +1,307 @@
+/**
+ * @fileoverview Admin Dashboard Styles
+ * @description Professional styling for admin interface
+ * @author Supply Chain Management Team
+ */
+
 .admin-dashboard {
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 2rem auto;
   padding: 2rem;
-  background: #ffffffcc; /* translucent background */
-  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
   backdrop-filter: blur(20px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
 }
 
-.admin-dashboard h2 {
-  font-size: 1.8rem;
-  font-weight: 600;
-  color: #1d1d1f;
+/* Dashboard Header */
+.dashboard-header {
   text-align: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid #e5e5ea;
 }
 
-.admin-dashboard p {
-  text-align: center;
+.dashboard-header h2 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #1d1d1f;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.admin-address {
+  font-size: 1rem;
   color: #6e6e73;
+  margin: 0;
+}
+
+.admin-address b {
+  color: #007aff;
+  font-weight: 600;
+}
+
+/* Loading Indicator */
+.loading-indicator {
+  text-align: center;
+  padding: 2rem;
+  color: #6e6e73;
+  font-size: 1.1rem;
+}
+
+/* Content Sections */
+.content-section {
   margin-bottom: 2rem;
 }
 
-/* Dashboard cards (Farmers, Distributors, Pending) */
-.dashboard-cards {
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e5e5ea;
+}
+
+.section-header h3 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin: 0;
+}
+
+.refresh-button {
+  background: #007aff;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.refresh-button:hover {
+  background: #0056b3;
+  transform: translateY(-1px);
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  color: #6e6e73;
+  font-style: italic;
+  padding: 2rem;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 12px;
+  border: 2px dashed #e5e5ea;
+}
+
+/* User Lists */
+.user-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.user-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 12px;
+  border: 1px solid #e5e5ea;
+  transition: all 0.2s ease;
+}
+
+.user-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.user-address {
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 0.9rem;
+  color: #1d1d1f;
+  font-weight: 500;
+}
+
+.user-index {
+  background: #007aff;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* Request Lists */
+.request-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.request-item {
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 16px;
+  border: 1px solid #e5e5ea;
+  padding: 1.5rem;
+  transition: all 0.2s ease;
+}
+
+.request-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.request-info {
+  margin-bottom: 1rem;
+}
+
+.request-address {
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 0.9rem;
+  color: #1d1d1f;
+  margin-bottom: 0.5rem;
+}
+
+.request-details {
+  font-size: 0.9rem;
+  color: #6e6e73;
+  margin-bottom: 0.5rem;
+}
+
+.request-date {
+  font-size: 0.8rem;
+  color: #8e8e93;
+  margin: 0;
+}
+
+.request-actions {
   display: flex;
   gap: 1rem;
-  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.approve-button {
+  flex: 1;
+  min-width: 150px;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.approve-button.farmer {
+  background: #34c759;
+  color: white;
+}
+
+.approve-button.farmer:hover {
+  background: #30a46c;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(52, 199, 89, 0.3);
+}
+
+.approve-button.distributor {
+  background: #007aff;
+  color: white;
+}
+
+.approve-button.distributor:hover {
+  background: #0056b3;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+}
+
+/* Dashboard Cards */
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
   margin-bottom: 2rem;
 }
 
 .dashboard-card {
-  flex: 1;
-  min-width: 200px;
-  padding: 1.5rem;
-  border-radius: 14px;
-  background: #f5f5f7;
-  border: 1px solid #e5e5ea;
+  padding: 2rem;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.02);
+  border: 2px solid #e5e5ea;
   text-align: center;
   cursor: pointer;
-  transition: background 0.25s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #007aff, #34c759);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.dashboard-card:hover::before {
+  transform: scaleX(1);
 }
 
 .dashboard-card h3 {
-  font-size: 1.1rem;
-  font-weight: 500;
+  font-size: 1.2rem;
+  font-weight: 600;
   color: #1d1d1f;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
 }
 
-.dashboard-card p {
-  font-size: 1.6rem;
-  font-weight: 600;
-  color: #007aff; /* Apple blue */
+.dashboard-card .count {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #007aff;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 122, 255, 0.2);
 }
 
 .dashboard-card:hover {
-  background: #e5e5ea;
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.05);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  border-color: #007aff;
 }
 
 .dashboard-card.active {
-  border: 2px solid #4aab31;
-  background: #f0f8ff;
+  border-color: #34c759;
+  background: rgba(52, 199, 89, 0.1);
+  transform: translateY(-2px);
 }
 
-/* Content area below cards */
+.dashboard-card.active .count {
+  color: #34c759;
+}
+
+/* Dashboard Content */
 .dashboard-content {
-  margin-top: 1.5rem;
-  padding: 1.5rem;
+  margin-top: 2rem;
+  padding: 2rem;
   border-radius: 16px;
-  background: #fafafa;
+  background: rgba(0, 0, 0, 0.02);
   border: 1px solid #e5e5ea;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-.dashboard-content h3 {
-  margin-bottom: 1rem;
-  font-size: 1.2rem;
-  font-weight: 500;
-  color: #1d1d1f;
-}
-
-.dashboard-content ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.dashboard-content li {
-  padding: 0.8rem 1rem;
-  margin-bottom: 0.6rem;
-  border-radius: 12px;
-  background: #ffffff;
-  border: 1px solid #e5e5ea;
-  font-size: 0.95rem;
-  color: #1d1d1f;
-}
-
-/* Approve buttons */
-.dashboard-content button {
-  margin-top: 0.5rem;
-  margin-right: 0.5rem;
-  padding: 0.6rem 1.2rem;
-  border-radius: 12px;
-  background: #51c331;
-  color: #fff;
-  font-size: 0.9rem;
-  font-weight: 500;
-  border: none;
-  cursor: pointer;
-  transition: background 0.25s ease, transform 0.1s ease;
-}
-
-.dashboard-content button:hover {
-  background: #0063cc;
-}
-
-.dashboard-content button:active {
-  transform: scale(0.97);
+  min-height: 400px;
 }

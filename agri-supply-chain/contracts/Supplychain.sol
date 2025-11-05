@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
-/// @title SupplyChain - role-based agricultural supply chain traceability & marketplace
-/// @author
-/// @notice Single-contract implementation covering Admin, Farmer, Distributor, Retailer, Customer flows.
-/// @dev Uses pull-on-failure payment pattern (attempt direct transfer; fallback to pending withdrawals).
+/// @title SupplyChain - Role-based agricultural supply chain traceability and marketplace
+/// @notice Single-contract implementation covering Admin, Farmer, Distributor, Retailer, and Customer flows.
+/// @dev Uses pull-on-failure payment pattern: attempt direct transfer; fallback to pending withdrawals.
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 contract SupplyChain is Ownable, ReentrancyGuard {
@@ -84,11 +83,11 @@ contract SupplyChain is Ownable, ReentrancyGuard {
     uint256 unitId;
     uint256 quantityKg;
     uint256 pricePerKg;
-    uint256 qtyKg;       // ✅ this line must exist
+    uint256 qtyKg;
     address seller;
     address buyer;
-    Role sellerRole;   // 👈 new
-    Role buyerRole;    // 👈 new
+    Role sellerRole;
+    Role buyerRole;
     uint256 timestamp;
     }
 
@@ -189,7 +188,7 @@ contract SupplyChain is Ownable, ReentrancyGuard {
         
         emit RoleRequested(msg.sender, role, block.timestamp);
     }
-    /// @notice Admin approves a requested role (Farmer/Distributor/ Retailer optionally)
+    /// @notice Admin approves a requested role (Farmer/Distributor/Retailer optionally)
     /// @param user address to approve
     /// @param role numeric role to assign
     function approveRole(address user, uint8 role) external onlyOwner {
@@ -432,7 +431,7 @@ contract SupplyChain is Ownable, ReentrancyGuard {
         br.createdAt = block.timestamp;
         emit BuyRequestCreated(br.requestId, packId, msg.sender, qtyKg, wantsRetailer, msg.value, block.timestamp);
     }
-    /// @notice Distributor resolves a buy request (accept/refuse). If accepted: transfer funds to distributor and create retail unit for requester, optionally assign Retailer role.
+    /// @notice Distributor resolves a buy request (accept/refuse). If accepted: transfer funds to distributor and create retail unit for requester; optionally assign Retailer role.
     function approveBuyRequest(uint256 requestId, bool accept) external onlyRole(Role.Distributor) nonReentrant {
         BuyRequest storage br = buyRequests[requestId];
         require(br.requestId != 0, "SupplyChain: request not found");
@@ -539,7 +538,7 @@ contract SupplyChain is Ownable, ReentrancyGuard {
         root.quantityKg -= sum;
         if (root.quantityKg == 0) root.available = false;
     }
-    /// @notice Retailer lists a unit for customers (visibility is simplified; front-end will filter by available)
+    /// @notice Retailer lists a unit for customers (visibility simplified; frontend filters by availability)
     function listUnitForCustomers(uint256 unitId, uint8 /*visibility*/) external onlyRole(Role.Retailer) {
         RetailUnit storage u = retailUnits[unitId];
         require(u.unitId != 0, "SupplyChain: unit not found");

@@ -1,7 +1,7 @@
 // src/components/RetailerDashboard.jsx
 import React, { useEffect, useState } from "react";
-import { getContract } from "../contract";
-import {  } from "ethers";
+import { getContract, getContractInstance } from "../Contract";
+// removed unused ethers import
 import "../styles/RetailerDashboard.css";
 
 export default function RetailerDashboard({ account }) {

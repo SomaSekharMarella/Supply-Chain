@@ -1,38 +1,318 @@
+/**
+ * @fileoverview Farmer Dashboard Styles
+ * @description Professional styling for farmer interface
+ * @author Supply Chain Management Team
+ */
+
+.farmer-dashboard {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Dashboard Header */
+.dashboard-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid #e5e5ea;
+}
+
+.dashboard-header h2 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #1d1d1f;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.farmer-address {
+  font-size: 1rem;
+  color: #6e6e73;
+  margin: 0;
+}
+
+.farmer-address b {
+  color: #34c759;
+  font-weight: 600;
+}
+
+/* Dashboard Buttons */
 .dashboard-buttons {
   display: flex;
   justify-content: center;
-  gap: 1rem;
+  gap: 1.5rem;
   margin: 2rem 0;
 }
 
 .dashboard-btn {
-  min-width: 180px;
-  padding: 0.75rem 1.5rem;
-  border-radius: 14px;
-  background: #f5f5f7; /* Apple light grey */
-  color: #1d1d1f; /* Apple dark text */
-  font-size: 1rem;
-  font-weight: 500;
+  min-width: 200px;
+  padding: 1rem 2rem;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.02);
+  color: #1d1d1f;
+  font-size: 1.1rem;
+  font-weight: 600;
   text-align: center;
   cursor: pointer;
-  border: 1px solid #d2d2d7; /* Apple thin border */
-  transition: all 0.25s ease;
+  border: 2px solid #e5e5ea;
+  transition: all 0.3s ease;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .dashboard-btn:hover {
-  background: #7fe056; /* slightly darker grey */
-}
-
-.dashboard-btn:active {
-  background: #d1d1d6; /* pressed effect */
-  transform: scale(0.98);
+  background: rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .dashboard-btn.active {
-  background: #22a944; /* Apple green accent */
+  background: #34c759;
   color: #fff;
+  border-color: #34c759;
+  box-shadow: 0 4px 16px rgba(52, 199, 89, 0.3);
+}
+
+/* Dashboard Content */
+.dashboard-content {
+  margin-top: 2rem;
+  padding: 2rem;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid #e5e5ea;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  min-height: 500px;
+}
+
+.content-section h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+/* Loading Indicator */
+.loading-indicator {
+  text-align: center;
+  padding: 2rem;
+  color: #6e6e73;
+  font-size: 1.1rem;
+}
+
+/* Product Form */
+.product-form {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.form-input,
+.form-select {
+  padding: 0.75rem 1rem;
+  border: 2px solid #e5e5ea;
+  border-radius: 12px;
+  font-size: 1rem;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.form-input:focus,
+.form-select:focus {
+  outline: none;
+  border-color: #34c759;
+  box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.1);
+}
+
+.submit-button {
+  width: 100%;
+  background: #34c759;
+  color: white;
   border: none;
-  box-shadow: 0 2px 6px rgba(52, 199, 89, 0.3);
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+}
+
+.submit-button:hover {
+  background: #30a46c;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3);
+}
+
+/* Section Header */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e5e5ea;
+}
+
+.section-header h3 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin: 0;
+}
+
+.refresh-button {
+  background: #007aff;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.refresh-button:hover {
+  background: #0056b3;
+  transform: translateY(-1px);
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  color: #6e6e73;
+  font-style: italic;
+  padding: 3rem;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 12px;
+  border: 2px dashed #e5e5ea;
+}
+
+.empty-state p {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+/* Products Grid */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+
+.product-card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e5e5ea;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border-color: #34c759;
+}
+
+.product-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e5e5ea;
+}
+
+.product-header h4 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin: 0;
+}
+
+.product-badge {
+  background: #34c759;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.product-details {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detail-row .label {
+  font-weight: 500;
+  color: #6e6e73;
+  font-size: 0.9rem;
+}
+
+.detail-row .value {
+  font-weight: 600;
+  color: #1d1d1f;
+  font-size: 0.9rem;
+}
+
+.status.active {
+  color: #34c759;
+}
+
+.status.inactive {
+  color: #ff3b30;
+}
+
+.visibility.public {
+  color: #007aff;
+}
+
+.visibility.private {
+  color: #8e8e93;
+}
+
+.ipfs-info {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e5ea;
+}
+
+.ipfs-hash {
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 0.8rem;
+  color: #6e6e73;
+  word-break: break-all;
 }

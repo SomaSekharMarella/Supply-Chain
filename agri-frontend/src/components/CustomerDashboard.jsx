@@ -1,6 +1,6 @@
 // src/components/CustomerDashboard.jsx
 import React, { useEffect, useState } from "react";
-import { getContract } from "../contract";
+import { getContract, getContractInstance } from "../Contract";
 import { ethers } from "ethers";
 import "../styles/CustomerDashboard.css";
 
@@ -87,22 +87,48 @@ export default function CustomerDashboard({ account }) {
       const mapped = await Promise.all(
         arr.map(async (p) => {
           const traceRaw = await contract.getUnitTrace(Number(p.unitId));
+          
+          // getUnitTrace returns: (FarmerProduct, DistributorBatch, RetailPack, RetailUnit)
+          const [farmerProduct, distributorBatch, retailPack, retailUnit] = traceRaw;
 
-          const traceFormatted = traceRaw.map((t) => {
-            let price = 0;
-            try {
-              price = Number(ethers.formatUnits(t.pricePerKg, 0));
-            } catch {
-              price = Number(t.pricePerKg) || 0;
-            }
-            return {
-              seller: shorten(t.seller),
-              sellerRole: roleNames[Number(t.sellerRole)] || "Unknown",
-              buyer: shorten(t.buyer),
-              buyerRole: roleNames[Number(t.buyerRole)] || "Unknown",
-              pricePerKg: price,
-            };
-          });
+          // Build trace chain with proper names and addresses
+          const traceFormatted = [];
+          
+          // 1. Farmer → Distributor
+          if (farmerProduct.batchId !== 0 && distributorBatch.batchId !== 0) {
+            traceFormatted.push({
+              seller: shorten(farmerProduct.farmer),
+              sellerRole: "Farmer",
+              buyer: shorten(distributorBatch.distributor),
+              buyerRole: "Distributor",
+              pricePerKg: Number(distributorBatch.purchasePricePerKg),
+              stage: "Farm to Distribution"
+            });
+          }
+          
+          // 2. Distributor → Retailer (via pack)
+          if (distributorBatch.batchId !== 0 && retailPack.packId !== 0) {
+            traceFormatted.push({
+              seller: shorten(distributorBatch.distributor),
+              sellerRole: "Distributor",
+              buyer: "Retailer", // Pack buyer is determined by buy request
+              buyerRole: "Retailer",
+              pricePerKg: Number(retailPack.pricePerKg),
+              stage: "Distribution to Retail"
+            });
+          }
+          
+          // 3. Retailer → Customer (via unit)
+          if (retailUnit.unitId !== 0) {
+            traceFormatted.push({
+              seller: shorten(retailUnit.retailer),
+              sellerRole: "Retailer",
+              buyer: shorten(p.buyer),
+              buyerRole: "Customer",
+              pricePerKg: Number(retailUnit.pricePerKg),
+              stage: "Retail to Customer"
+            });
+          }
 
           return {
             purchaseId: Number(p.purchaseId),
@@ -113,6 +139,20 @@ export default function CustomerDashboard({ account }) {
             pricePerKg: Number(p.pricePerKg),
             timestamp: Number(p.timestamp),
             trace: traceFormatted,
+            // Additional trace info
+            farmerInfo: {
+              cropName: farmerProduct.cropName,
+              location: farmerProduct.location,
+              farmer: shorten(farmerProduct.farmer)
+            },
+            distributorInfo: {
+              distributor: shorten(distributorBatch.distributor),
+              purchasePrice: Number(distributorBatch.purchasePricePerKg)
+            },
+            retailerInfo: {
+              retailer: shorten(retailUnit.retailer),
+              retailPrice: Number(retailUnit.pricePerKg)
+            }
           };
         })
       );
@@ -255,27 +295,60 @@ export default function CustomerDashboard({ account }) {
         <button onClick={loadPurchaseHistory}>Refresh</button>
         {purchaseHistory.map((p) => (
           <div key={p.purchaseId} className="purchase-card">
-            <p>
-              <b>PurchaseId:</b> {p.purchaseId} | <b>UnitId:</b> {p.unitId}
-            </p>
-            <p>
-              <b>Qty:</b> {p.qty} | <b>Price/Kg:</b> {p.pricePerKg}
-            </p>
-            <p>
-              <b>Trace:</b>
-            </p>
-            <ul>
+            <div className="purchase-header">
+              <h4>Purchase #{p.purchaseId}</h4>
+              <p><strong>Unit ID:</strong> {p.unitId} | <strong>Quantity:</strong> {p.qty} kg | <strong>Price:</strong> {p.pricePerKg} wei/kg</p>
+            </div>
+            
+            {/* Product Information */}
+            <div className="product-info">
+              <h5>🌱 Product Information</h5>
+              <p><strong>Crop:</strong> {p.farmerInfo.cropName}</p>
+              <p><strong>Farm Location:</strong> {p.farmerInfo.location}</p>
+              <p><strong>Original Farmer:</strong> {p.farmerInfo.farmer}</p>
+            </div>
+
+            {/* Supply Chain Trace */}
+            <div className="trace-info">
+              <h5>🔍 Supply Chain Trace</h5>
               {p.trace.length === 0 ? (
-                <li>No trace available</li>
+                <p className="no-trace">No trace information available</p>
               ) : (
-                p.trace.map((t, idx) => (
-                  <li key={idx}>
-                    {t.sellerRole} ({t.seller}) → {t.buyerRole} ({t.buyer}) @{" "}
-                    {t.pricePerKg} per Kg
-                  </li>
-                ))
+                <div className="trace-chain">
+                  {p.trace.map((t, idx) => (
+                    <div key={idx} className="trace-step">
+                      <div className="trace-stage">{t.stage}</div>
+                      <div className="trace-details">
+                        <span className="seller">{t.sellerRole} ({t.seller})</span>
+                        <span className="arrow">→</span>
+                        <span className="buyer">{t.buyerRole} ({t.buyer})</span>
+                        <span className="price">@ {t.pricePerKg} wei/kg</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
-            </ul>
+            </div>
+
+            {/* Additional Details */}
+            <div className="additional-info">
+              <h5>📊 Additional Details</h5>
+              <div className="info-grid">
+                <div className="info-item">
+                  <strong>Distributor:</strong> {p.distributorInfo.distributor}
+                  <br />
+                  <small>Purchase Price: {p.distributorInfo.purchasePrice} wei/kg</small>
+                </div>
+                <div className="info-item">
+                  <strong>Retailer:</strong> {p.retailerInfo.retailer}
+                  <br />
+                  <small>Retail Price: {p.retailerInfo.retailPrice} wei/kg</small>
+                </div>
+                <div className="info-item">
+                  <strong>Purchase Date:</strong> {new Date(p.timestamp * 1000).toLocaleString()}
+                </div>
+              </div>
+            </div>
           </div>
         ))}
       </section>

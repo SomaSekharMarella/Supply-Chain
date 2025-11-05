@@ -1,20 +1,27 @@
+/**
+ * @fileoverview Customer Dashboard Styles
+ * @description Professional styling for customer interface with enhanced traceability
+ * @author Supply Chain Management Team
+ */
+
 .customer-dashboard {
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 2rem auto;
   padding: 2rem;
-  background: #ffffffcc; /* translucent card-like background */
-  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
   backdrop-filter: blur(20px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
 }
 
 .customer-dashboard h2 {
-  font-size: 1.8rem;
-  font-weight: 600;
+  font-size: 2.2rem;
+  font-weight: 700;
   color: #1d1d1f;
   text-align: center;
   margin-bottom: 0.5rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .customer-dashboard p {
@@ -25,18 +32,197 @@
 
 .customer-dashboard section {
   margin-bottom: 2rem;
-  padding: 1.5rem;
+  padding: 2rem;
   border-radius: 16px;
-  background: #fafafa;
+  background: rgba(0, 0, 0, 0.02);
   border: 1px solid #e5e5ea;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .customer-dashboard section h3 {
-  font-size: 1.2rem;
-  font-weight: 500;
+  font-size: 1.4rem;
+  font-weight: 600;
   color: #1d1d1f;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+/* Purchase Cards */
+.purchase-card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e5e5ea;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.purchase-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border-color: #007aff;
+}
+
+.purchase-header {
+  border-bottom: 2px solid #e5e5ea;
+  padding-bottom: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.purchase-header h4 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin: 0 0 0.5rem 0;
+}
+
+.purchase-header p {
+  color: #6e6e73;
+  margin: 0;
+  text-align: left;
+}
+
+/* Product Information */
+.product-info {
+  background: rgba(52, 199, 89, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(52, 199, 89, 0.3);
+}
+
+.product-info h5 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin: 0 0 1rem 0;
+}
+
+.product-info p {
+  margin: 0.5rem 0;
+  text-align: left;
+  color: #1d1d1f;
+}
+
+/* Trace Information */
+.trace-info {
+  background: rgba(0, 122, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(0, 122, 255, 0.3);
+}
+
+.trace-info h5 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin: 0 0 1rem 0;
+}
+
+.no-trace {
+  color: #8e8e93;
+  font-style: italic;
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.trace-chain {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.trace-step {
+  background: white;
+  border-radius: 10px;
+  padding: 1rem;
+  border: 1px solid #e5e5ea;
+  transition: all 0.2s ease;
+}
+
+.trace-step:hover {
+  background: rgba(0, 0, 0, 0.02);
+  transform: translateX(4px);
+}
+
+.trace-stage {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #007aff;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.trace-details {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.trace-details .seller,
+.trace-details .buyer {
+  font-weight: 600;
+  color: #1d1d1f;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 0.9rem;
+}
+
+.trace-details .arrow {
+  font-size: 1.2rem;
+  color: #007aff;
+  font-weight: bold;
+}
+
+.trace-details .price {
+  background: #007aff;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-left: auto;
+}
+
+/* Additional Information */
+.additional-info {
+  background: rgba(255, 149, 0, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 149, 0, 0.3);
+}
+
+.additional-info h5 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin: 0 0 1rem 0;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.info-item {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px solid #e5e5ea;
+}
+
+.info-item strong {
+  color: #1d1d1f;
+  font-weight: 600;
+}
+
+.info-item small {
+  color: #6e6e73;
+  font-size: 0.8rem;
 }
 
 /* Data cards */
@@ -57,17 +243,19 @@
   margin-right: 0.6rem;
   padding: 0.6rem 1.2rem;
   border-radius: 12px;
-  background: #159a29; /* Apple blue */
+  background: #007aff;
   color: #fff;
   font-size: 0.9rem;
   font-weight: 500;
   border: none;
   cursor: pointer;
-  transition: background 0.25s ease, transform 0.1s ease;
+  transition: all 0.25s ease;
 }
 
 .customer-dashboard button:hover {
-  background: #0063cc;
+  background: #0056b3;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
 }
 
 .customer-dashboard button:active {
@@ -87,11 +275,11 @@
   background: #ffffff;
   color: #1d1d1f;
   outline: none;
-  transition: border 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .customer-dashboard input:focus,
 .customer-dashboard select:focus {
-  border-color: #119061;
+  border-color: #007aff;
   box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
 }

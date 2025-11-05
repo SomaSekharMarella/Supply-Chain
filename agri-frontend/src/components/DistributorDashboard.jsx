@@ -1,6 +1,6 @@
 // src/components/DistributorDashboard.jsx
 import React, { useEffect, useState } from "react";
-import { getContract } from "../contract";
+import { getContract, getContractInstance } from "../Contract";
 import { ethers } from "ethers";
 import "../styles/DistributorDashboard.css";
 
