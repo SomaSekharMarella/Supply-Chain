@@ -1,122 +1,195 @@
+/**
+ * @fileoverview Retailer Dashboard Styles
+ * @description Clean, professional styling
+ */
+
 .dashboard {
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 2rem auto;
   padding: 2rem;
-  background: #ffffffcc; /* translucent glass card */
-  border-radius: 18px;
-  backdrop-filter: blur(20px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
 }
 
 .dashboard-title {
-  font-size: 1.8rem;
+  font-size: 2rem;
   font-weight: 600;
-  color: #1d1d1f;
+  color: var(--text-primary);
   text-align: center;
   margin-bottom: 0.5rem;
 }
 
 .account {
   text-align: center;
-  color: #6e6e73;
+  color: var(--text-secondary);
   margin-bottom: 2rem;
+  font-size: 0.95rem;
+}
+
+.account b {
+  color: var(--primary-green);
+  font-weight: 600;
 }
 
 /* Sections */
 .section {
   margin-bottom: 2rem;
   padding: 1.5rem;
-  border-radius: 16px;
-  background: #fafafa;
-  border: 1px solid #e5e5ea;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
 }
 
 .section h3 {
-  font-size: 1.2rem;
-  font-weight: 500;
-  color: #1d1d1f;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
   margin-bottom: 1rem;
 }
 
 /* Card list */
 .card-list {
   display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1rem;
   margin: 1rem 0;
 }
 
 .card {
   padding: 1rem;
-  border-radius: 14px;
-  background: #ffffff;
-  border: 1px solid #e5e5ea;
-  font-size: 0.95rem;
-  color: #1d1d1f;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  border-radius: 8px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  transition: box-shadow 0.2s;
 }
 
 .card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card p {
+  margin: 0.5rem 0;
+  line-height: 1.5;
+}
+
+.card p:first-child {
+  font-weight: 600;
+  color: var(--primary-green);
 }
 
 /* Buttons */
 .btn-primary {
-  display: inline-block;
-  margin-top: 0.6rem;
-  margin-right: 0.6rem;
-  padding: 0.6rem 1.2rem;
-  border-radius: 12px;
-  background: #2bd155; /* iOS blue */
-  color: #fff;
-  font-size: 0.9rem;
-  font-weight: 500;
-  border: none;
-  cursor: pointer;
-  transition: background 0.25s ease, transform 0.1s ease;
+  display: inline-block !important;
+  margin-top: 0.5rem;
+  margin-right: 0.5rem;
+  padding: 0.625rem 1.25rem !important;
+  border-radius: 6px !important;
+  background: #2d8659 !important;
+  color: #ffffff !important;
+  font-size: 0.9rem !important;
+  font-weight: 500 !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: background 0.2s !important;
 }
 
 .btn-primary:hover {
-  background: #169d51;
-}
-
-.btn-primary:active {
-  transform: scale(0.97);
+  background: #1f5d3f !important;
 }
 
 /* Forms */
 .form {
   margin-top: 1rem;
+  padding: 1.5rem;
+  background: var(--bg-primary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-field label {
+  font-weight: 600;
+  color: #1d1d1f;
+  font-size: 0.9rem;
+}
+
+.checkbox-field {
+  display: flex;
+  align-items: center;
+  padding-top: 1.5rem;
 }
 
 .form input,
 .form select {
-  padding: 0.6rem 1rem;
-  margin: 0.4rem 0.4rem 0.4rem 0;
-  border-radius: 12px;
-  border: 1px solid #d1d1d6;
-  font-size: 0.9rem;
-  background: #ffffff;
-  color: #1d1d1f;
-  outline: none;
-  transition: border 0.2s ease, box-shadow 0.2s ease;
+  padding: 0.75rem 1rem !important;
+  border: 2px solid #d2d2d7 !important;
+  border-radius: 8px !important;
+  font-size: 0.95rem !important;
+  background: #ffffff !important;
+  color: #1d1d1f !important;
+  outline: none !important;
+  transition: all 0.2s !important;
+  font-family: inherit !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  margin: 0 !important;
 }
 
 .form input:focus,
 .form select:focus {
-  border-color: #12673a;
-  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+  border-color: #2d8659 !important;
+  box-shadow: 0 0 0 3px rgba(45, 134, 89, 0.1) !important;
+}
+
+.form input::placeholder {
+  color: #8e8e93 !important;
+  opacity: 1 !important;
 }
 
 /* Checkbox */
 .checkbox {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  margin: 0.6rem 0;
+  gap: 0.5rem;
   font-size: 0.9rem;
   color: #1d1d1f;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.checkbox input[type="checkbox"] {
+  width: 20px !important;
+  height: 20px !important;
+  cursor: pointer !important;
+  accent-color: #2d8659 !important;
+  margin: 0 !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 1rem;
+  }
+  
+  .card-list {
+    grid-template-columns: 1fr;
+  }
+  
+  .form {
+    grid-template-columns: 1fr;
+  }
 }

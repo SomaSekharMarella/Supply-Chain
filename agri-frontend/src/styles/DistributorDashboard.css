@@ -1,130 +1,173 @@
+/**
+ * @fileoverview Distributor Dashboard Styles
+ * @description Clean, professional styling
+ */
+
 .distributor-dashboard {
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 2rem auto;
   padding: 2rem;
-  background: #ffffffcc; /* subtle translucency */
-  border-radius: 18px;
-  backdrop-filter: blur(20px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
 }
 
 .distributor-dashboard h2 {
-  font-size: 1.8rem;
+  font-size: 2rem;
   font-weight: 600;
-  color: #1d1d1f;
+  color: var(--text-primary);
   text-align: center;
   margin-bottom: 0.5rem;
 }
 
-.distributor-dashboard p {
+.distributor-dashboard > p {
   text-align: center;
-  color: #6e6e73;
+  color: var(--text-secondary);
   margin-bottom: 2rem;
+  font-size: 0.95rem;
+}
+
+.distributor-dashboard > p b {
+  color: var(--primary-green);
+  font-weight: 600;
 }
 
 /* Collapsible toggle buttons */
 .toggle-btn {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   width: 100%;
-  padding: 0.9rem 1rem;
-  margin: 1rem 0;
-  background: #f5f5f7;
-  border: 1px solid #d2d2d7;
-  border-radius: 14px;
+  padding: 0.875rem 1.25rem;
+  margin: 0.75rem 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
   text-align: left;
   font-size: 1rem;
   font-weight: 500;
-  color: #1d1d1f;
+  color: var(--text-primary);
   cursor: pointer;
-  transition: background 0.25s ease;
+  transition: background 0.2s;
 }
 
 .toggle-btn:hover {
-  background: #e5e5ea;
+  background: var(--bg-tertiary);
 }
 
-/* Section content (collapsible) */
+/* Section content */
 .section-content {
   padding: 1.5rem;
   margin-top: 0.5rem;
-  background: #fafafa;
-  border-radius: 16px;
-  border: 1px solid #e5e5ea;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  background: var(--bg-tertiary);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
 }
 
-/* Cards (farmer batches, inventory, requests) */
+/* Cards */
 .distributor-card {
   padding: 1rem;
   margin: 0.75rem 0;
-  border-radius: 12px;
-  background: #ffffff;
-  border: 1px solid #e5e5ea;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  transition: box-shadow 0.2s;
+}
+
+.distributor-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .distributor-card p {
-  margin: 0.25rem 0;
-  font-size: 0.95rem;
-  color: #1d1d1f;
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+.distributor-card p:first-child {
+  font-weight: 600;
+  color: var(--primary-green);
 }
 
 /* Forms */
 .distributor-form {
   margin-top: 1.5rem;
-  padding: 1.2rem;
-  border-radius: 14px;
-  background: #f9f9f9;
-  border: 1px solid #e5e5ea;
+  padding: 1.25rem;
+  border-radius: 8px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
 }
 
 .distributor-form h4 {
-  margin-bottom: 0.8rem;
+  margin-bottom: 1rem;
   font-size: 1.1rem;
-  font-weight: 500;
-  color: #1d1d1f;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .distributor-form input,
 .distributor-form select {
-  width: 100%;
-  padding: 0.7rem;
-  margin-bottom: 0.9rem;
-  border: 1px solid #d2d2d7;
-  border-radius: 12px;
-  background: #fff;
-  font-size: 0.95rem;
-  color: #1d1d1f;
-  transition: border 0.25s ease;
+  width: 100% !important;
+  padding: 0.75rem 1rem !important;
+  margin-bottom: 0.75rem !important;
+  border: 2px solid #d2d2d7 !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  font-size: 0.95rem !important;
+  color: #1d1d1f !important;
+  transition: all 0.2s !important;
+  font-family: inherit !important;
+  box-sizing: border-box !important;
 }
 
 .distributor-form input:focus,
 .distributor-form select:focus {
-  outline: none;
-  border-color: #5fd852; /* Apple blue highlight */
+  outline: none !important;
+  border-color: #2d8659 !important;
+  box-shadow: 0 0 0 3px rgba(45, 134, 89, 0.1) !important;
+}
+
+.distributor-form input::placeholder {
+  color: #8e8e93 !important;
+  opacity: 1 !important;
 }
 
 /* Buttons */
 .distributor-form button,
 .section-content button {
-  padding: 0.6rem 1.2rem;
-  border-radius: 12px;
-  background: #53ae45;
-  color: #fff;
-  font-size: 0.95rem;
-  font-weight: 500;
-  border: none;
-  cursor: pointer;
-  transition: background 0.25s ease, transform 0.1s ease;
+  padding: 0.625rem 1.25rem !important;
+  border-radius: 6px !important;
+  background: #2d8659 !important;
+  color: #ffffff !important;
+  font-size: 0.9rem !important;
+  font-weight: 500 !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: background 0.2s !important;
 }
 
 .distributor-form button:hover,
 .section-content button:hover {
-  background: #58ca6d;
+  background: #1f5d3f !important;
 }
 
-.distributor-form button:active,
-.section-content button:active {
-  transform: scale(0.97);
+/* Empty state */
+.section-content > p {
+  text-align: center;
+  color: var(--text-tertiary);
+  font-style: italic;
+  padding: 2rem;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px dashed var(--border-color);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .distributor-dashboard {
+    padding: 1rem;
+  }
 }

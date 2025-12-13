@@ -159,27 +159,38 @@ export default function RetailerDashboard({ account }) {
           ))}
         </div>
         <div className="form">
-          <input
-            placeholder="packId"
-            value={buyRequestForm.packId}
-            onChange={(e) => setBuyRequestForm({ ...buyRequestForm, packId: e.target.value })}
-          />
-          <input
-            placeholder="qty"
-            value={buyRequestForm.qty}
-            onChange={(e) => setBuyRequestForm({ ...buyRequestForm, qty: e.target.value })}
-          />
-          <label className="checkbox">
+          <div className="form-field">
+            <label>Pack ID</label>
             <input
-              type="checkbox"
-              checked={buyRequestForm.wantsRetailer}
-              onChange={(e) =>
-                setBuyRequestForm({ ...buyRequestForm, wantsRetailer: e.target.checked })
-              }
+              placeholder="Enter pack ID"
+              value={buyRequestForm.packId}
+              onChange={(e) => setBuyRequestForm({ ...buyRequestForm, packId: e.target.value })}
             />
-            Wants Retailer Role
-          </label>
-          <button className="btn-primary" onClick={createBuyRequest}>Create Buy Request</button>
+          </div>
+          <div className="form-field">
+            <label>Quantity (Kg)</label>
+            <input
+              placeholder="Enter quantity"
+              value={buyRequestForm.qty}
+              onChange={(e) => setBuyRequestForm({ ...buyRequestForm, qty: e.target.value })}
+            />
+          </div>
+          <div className="form-field checkbox-field">
+            <label className="checkbox">
+              <input
+                type="checkbox"
+                checked={buyRequestForm.wantsRetailer}
+                onChange={(e) =>
+                  setBuyRequestForm({ ...buyRequestForm, wantsRetailer: e.target.checked })
+                }
+              />
+              Wants Retailer Role
+            </label>
+          </div>
+          <div className="form-field">
+            <label>&nbsp;</label>
+            <button className="btn-primary" onClick={createBuyRequest}>Create Buy Request</button>
+          </div>
         </div>
       </section>
 
@@ -203,27 +214,42 @@ export default function RetailerDashboard({ account }) {
       <section className="section">
         <h3>Split Unit</h3>
         <div className="form">
-          <input
-            placeholder="unitId"
-            value={splitForm.unitId}
-            onChange={(e) => setSplitForm({ ...splitForm, unitId: e.target.value })}
-          />
-          <input
-            placeholder="quantities CSV"
-            value={splitForm.quantitiesCSV}
-            onChange={(e) => setSplitForm({ ...splitForm, quantitiesCSV: e.target.value })}
-          />
-          <input
-            placeholder="prices CSV"
-            value={splitForm.pricesCSV}
-            onChange={(e) => setSplitForm({ ...splitForm, pricesCSV: e.target.value })}
-          />
-          <input
-            placeholder="ipfs CSV"
-            value={splitForm.ipfsCSV}
-            onChange={(e) => setSplitForm({ ...splitForm, ipfsCSV: e.target.value })}
-          />
-          <button className="btn-primary" onClick={splitUnit}>Split</button>
+          <div className="form-field">
+            <label>Unit ID</label>
+            <input
+              placeholder="Enter unit ID"
+              value={splitForm.unitId}
+              onChange={(e) => setSplitForm({ ...splitForm, unitId: e.target.value })}
+            />
+          </div>
+          <div className="form-field">
+            <label>Quantities (CSV)</label>
+            <input
+              placeholder="e.g., 10,20,30"
+              value={splitForm.quantitiesCSV}
+              onChange={(e) => setSplitForm({ ...splitForm, quantitiesCSV: e.target.value })}
+            />
+          </div>
+          <div className="form-field">
+            <label>Prices (CSV)</label>
+            <input
+              placeholder="e.g., 100,200,300"
+              value={splitForm.pricesCSV}
+              onChange={(e) => setSplitForm({ ...splitForm, pricesCSV: e.target.value })}
+            />
+          </div>
+          <div className="form-field">
+            <label>IPFS Hashes (CSV)</label>
+            <input
+              placeholder="e.g., hash1,hash2,hash3"
+              value={splitForm.ipfsCSV}
+              onChange={(e) => setSplitForm({ ...splitForm, ipfsCSV: e.target.value })}
+            />
+          </div>
+          <div className="form-field">
+            <label>&nbsp;</label>
+            <button className="btn-primary" onClick={splitUnit}>Split</button>
+          </div>
         </div>
       </section>
 
@@ -231,12 +257,18 @@ export default function RetailerDashboard({ account }) {
       <section className="section">
         <h3>List Unit for Customers</h3>
         <div className="form">
-          <input
-            placeholder="unitId"
-            value={listForm.unitId}
-            onChange={(e) => setListForm({ ...listForm, unitId: e.target.value })}
-          />
-          <button className="btn-primary" onClick={listUnit}>List</button>
+          <div className="form-field">
+            <label>Unit ID</label>
+            <input
+              placeholder="Enter unit ID to list"
+              value={listForm.unitId}
+              onChange={(e) => setListForm({ ...listForm, unitId: e.target.value })}
+            />
+          </div>
+          <div className="form-field">
+            <label>&nbsp;</label>
+            <button className="btn-primary" onClick={listUnit}>List</button>
+          </div>
         </div>
       </section>
 
