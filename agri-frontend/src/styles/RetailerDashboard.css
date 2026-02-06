@@ -59,27 +59,87 @@
 }
 
 .card {
-  padding: 1rem;
-  border-radius: 8px;
+  padding: 1.5rem;
+  border-radius: 12px;
   background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  font-size: 0.9rem;
-  color: var(--text-primary);
-  transition: box-shadow 0.2s;
+  border: 2px solid var(--border-color);
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .card:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary-green);
+  transform: translateY(-2px);
 }
 
-.card p {
-  margin: 0.5rem 0;
-  line-height: 1.5;
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
 }
 
-.card p:first-child {
+.card-header h4 {
+  font-size: 1.2rem;
   font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.status-badge.available {
+  background: rgba(45, 134, 89, 0.1);
   color: var(--primary-green);
+}
+
+.status-badge.unavailable {
+  background: rgba(142, 142, 147, 0.1);
+  color: var(--text-tertiary);
+}
+
+.card-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.card-details p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.card-details strong {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.card-details small {
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+  word-break: break-all;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  border: 2px dashed var(--border-color);
+  color: var(--text-tertiary);
+  font-style: italic;
+  margin: 1rem 0;
 }
 
 /* Buttons */

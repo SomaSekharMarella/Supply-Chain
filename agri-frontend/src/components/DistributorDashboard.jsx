@@ -86,22 +86,66 @@ export default function DistributorDashboard({ account }) {
     try {
       const contract = await getContract(false);
       const res = await contract.getDistributorInventory(account);
-      const batches = res[0].map((b) => ({
-        batchId: Number(b.batchId),
-        originBatchId: Number(b.originBatchId),
-        qty: Number(b.quantityKg),
-        purchasePrice: Number(b.purchasePricePerKg),
-        active: b.active,
-      }));
-      const packs = res[1].map((p) => ({
-        packId: Number(p.packId),
-        distributorBatchId: Number(p.distributorBatchId),
-        qty: Number(p.quantityKg),
-        pricePerKg: Number(p.pricePerKg),
-        available: p.available,
-        visibility: Number(p.visibility),
-        privateBuyer: p.privateBuyer,
-      }));
+      
+      // Load batches with product info
+      const batches = await Promise.all(
+        res[0].map(async (b) => {
+          let cropName = "Unknown";
+          let location = "Unknown";
+          try {
+            const farmerProduct = await contract.farmerProducts(Number(b.originBatchId));
+            if (farmerProduct.batchId !== 0) {
+              cropName = farmerProduct.cropName || "Unknown";
+              location = farmerProduct.location || "Unknown";
+            }
+          } catch (err) {
+            console.warn("Could not fetch farmer product:", err);
+          }
+          
+          return {
+            batchId: Number(b.batchId),
+            originBatchId: Number(b.originBatchId),
+            qty: Number(b.quantityKg),
+            purchasePrice: Number(b.purchasePricePerKg),
+            active: b.active,
+            cropName: cropName,
+            location: location,
+          };
+        })
+      );
+      
+      // Load packs with product info
+      const packs = await Promise.all(
+        res[1].map(async (p) => {
+          let cropName = "Unknown";
+          let location = "Unknown";
+          try {
+            const distributorBatch = await contract.distributorBatches(Number(p.distributorBatchId));
+            if (distributorBatch.batchId !== 0) {
+              const farmerProduct = await contract.farmerProducts(Number(distributorBatch.originBatchId));
+              if (farmerProduct.batchId !== 0) {
+                cropName = farmerProduct.cropName || "Unknown";
+                location = farmerProduct.location || "Unknown";
+              }
+            }
+          } catch (err) {
+            console.warn("Could not fetch product info:", err);
+          }
+          
+          return {
+            packId: Number(p.packId),
+            distributorBatchId: Number(p.distributorBatchId),
+            qty: Number(p.quantityKg),
+            pricePerKg: Number(p.pricePerKg),
+            available: p.available,
+            visibility: Number(p.visibility),
+            privateBuyer: p.privateBuyer,
+            cropName: cropName,
+            location: location,
+          };
+        })
+      );
+      
       setDistributorInventory({ batches, packs });
     } catch (err) {
       console.error(err);
@@ -202,33 +246,49 @@ export default function DistributorDashboard({ account }) {
         <section className="section-content">
           <button onClick={loadPublicFarmerProducts}>Refresh list</button>
           {publicFarmerProducts.length === 0 ? (
-            <p>No public farmer batches</p>
+            <div className="empty-state">
+              <p>No public farmer batches available</p>
+            </div>
           ) : (
-            publicFarmerProducts.map((p) => (
-              <div key={p.batchId} className="distributor-card">
-                <p>
-                  <b>Batch:</b> {p.batchId} | Crop: {p.cropName} | Qty: {p.qty} kg |
-                  PricePerKg: {p.pricePerKg}
-                </p>
-                <p>
-                  <b>Farmer:</b> {p.farmer}
-                </p>
-              </div>
-            ))
+            <div className="products-grid">
+              {publicFarmerProducts.map((p) => (
+                <div key={p.batchId} className="product-card">
+                  <div className="product-header">
+                    <h5>{p.cropName}</h5>
+                    <span className="batch-badge">Batch #{p.batchId}</span>
+                  </div>
+                  <div className="product-details">
+                    <p><strong>Quantity:</strong> {p.qty} kg</p>
+                    <p><strong>Price per Kg:</strong> {p.pricePerKg} wei</p>
+                    <p><strong>Farmer:</strong> {p.farmer}</p>
+                    {p.ipfs && <p><strong>IPFS:</strong> <small>{p.ipfs}</small></p>}
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
           <div className="distributor-form">
-            <h4>Buy farmer batch</h4>
-            <input
-              placeholder="farmerBatchId"
-              value={selectedBatchId}
-              onChange={(e) => setSelectedBatchId(e.target.value)}
-            />
-            <input
-              placeholder="qty"
-              value={buyQty}
-              onChange={(e) => setBuyQty(e.target.value)}
-            />
-            <button onClick={buyBatch}>Buy (send value)</button>
+            <h4>Buy Farmer Batch</h4>
+            <div className="form-field">
+              <label>Farmer Batch ID</label>
+              <input
+                placeholder="Enter batch ID"
+                value={selectedBatchId}
+                onChange={(e) => setSelectedBatchId(e.target.value)}
+              />
+            </div>
+            <div className="form-field">
+              <label>Quantity (Kg)</label>
+              <input
+                placeholder="Enter quantity"
+                value={buyQty}
+                onChange={(e) => setBuyQty(e.target.value)}
+              />
+            </div>
+            <div className="form-field">
+              <label>&nbsp;</label>
+              <button onClick={buyBatch} className="btn-primary">Buy Batch</button>
+            </div>
           </div>
         </section>
       )}
@@ -245,85 +305,142 @@ export default function DistributorDashboard({ account }) {
           <button onClick={loadInventory}>Refresh Inventory</button>
           <div>
             <h4>Batches</h4>
-            {distributorInventory.batches.map((b) => (
-              <div key={b.batchId} className="distributor-card">
-                <p>
-                  BatchId: {b.batchId} | Origin: {b.originBatchId} | Qty: {b.qty} |
-                  purchasePrice: {b.purchasePrice}
-                </p>
+            {distributorInventory.batches.length === 0 ? (
+              <p className="empty-state">No batches in inventory</p>
+            ) : (
+              <div className="inventory-grid">
+                {distributorInventory.batches.map((b) => (
+                  <div key={b.batchId} className="inventory-card">
+                    <div className="card-header">
+                      <h5>{b.cropName}</h5>
+                      <span className={`status-badge ${b.active ? "active" : "inactive"}`}>
+                        {b.active ? "Active" : "Inactive"}
+                      </span>
+                    </div>
+                    <div className="card-details">
+                      <p><strong>Batch ID:</strong> #{b.batchId}</p>
+                      <p><strong>Origin Batch:</strong> #{b.originBatchId}</p>
+                      <p><strong>Quantity:</strong> {b.qty} kg</p>
+                      <p><strong>Purchase Price:</strong> {b.purchasePrice} wei/kg</p>
+                      <p><strong>Location:</strong> {b.location}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
             <h4>Packs</h4>
-            {distributorInventory.packs.map((p) => (
-              <div key={p.packId} className="distributor-card">
-                <p>
-                  PackId: {p.packId} | FromBatch: {p.distributorBatchId} | Qty: {p.qty} |
-                  pricePerKg: {p.pricePerKg} | avail: {p.available ? "Yes" : "No"} |
-                  vis: {p.visibility}
-                </p>
+            {distributorInventory.packs.length === 0 ? (
+              <p className="empty-state">No packs in inventory</p>
+            ) : (
+              <div className="inventory-grid">
+                {distributorInventory.packs.map((p) => (
+                  <div key={p.packId} className="inventory-card">
+                    <div className="card-header">
+                      <h5>{p.cropName}</h5>
+                      <span className={`status-badge ${p.available ? "active" : "inactive"}`}>
+                        {p.available ? "Available" : "Unavailable"}
+                      </span>
+                    </div>
+                    <div className="card-details">
+                      <p><strong>Pack ID:</strong> #{p.packId}</p>
+                      <p><strong>From Batch:</strong> #{p.distributorBatchId}</p>
+                      <p><strong>Quantity:</strong> {p.qty} kg</p>
+                      <p><strong>Price per Kg:</strong> {p.pricePerKg} wei</p>
+                      <p><strong>Location:</strong> {p.location}</p>
+                      <p><strong>Visibility:</strong> {p.visibility === 1 ? "🌍 Public" : "🔒 Private"}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
 
           <div className="distributor-form">
             <h4>Split Distributor Batch → Create Packs</h4>
-            <input
-              placeholder="distributorBatchId"
-              value={splitForm.distributorBatchId}
-              onChange={(e) =>
-                setSplitForm({ ...splitForm, distributorBatchId: e.target.value })
-              }
-            />
-            <input
-              placeholder="quantities CSV (e.g. 10,20)"
-              value={splitForm.quantitiesCSV}
-              onChange={(e) =>
-                setSplitForm({ ...splitForm, quantitiesCSV: e.target.value })
-              }
-            />
-            <input
-              placeholder="prices CSV (e.g. 120,130)"
-              value={splitForm.pricesCSV}
-              onChange={(e) =>
-                setSplitForm({ ...splitForm, pricesCSV: e.target.value })
-              }
-            />
-            <input
-              placeholder="ipfs CSV (optional)"
-              value={splitForm.ipfsCSV}
-              onChange={(e) =>
-                setSplitForm({ ...splitForm, ipfsCSV: e.target.value })
-              }
-            />
-            <button onClick={splitDistributor}>Create Packs</button>
+            <div className="form-field">
+              <label>Distributor Batch ID</label>
+              <input
+                placeholder="Enter batch ID"
+                value={splitForm.distributorBatchId}
+                onChange={(e) =>
+                  setSplitForm({ ...splitForm, distributorBatchId: e.target.value })
+                }
+              />
+            </div>
+            <div className="form-field">
+              <label>Quantities (CSV)</label>
+              <input
+                placeholder="e.g., 10,20,30"
+                value={splitForm.quantitiesCSV}
+                onChange={(e) =>
+                  setSplitForm({ ...splitForm, quantitiesCSV: e.target.value })
+                }
+              />
+            </div>
+            <div className="form-field">
+              <label>Prices (CSV)</label>
+              <input
+                placeholder="e.g., 120,130,140"
+                value={splitForm.pricesCSV}
+                onChange={(e) =>
+                  setSplitForm({ ...splitForm, pricesCSV: e.target.value })
+                }
+              />
+            </div>
+            <div className="form-field">
+              <label>IPFS Hashes (CSV, optional)</label>
+              <input
+                placeholder="e.g., hash1,hash2,hash3"
+                value={splitForm.ipfsCSV}
+                onChange={(e) =>
+                  setSplitForm({ ...splitForm, ipfsCSV: e.target.value })
+                }
+              />
+            </div>
+            <div className="form-field">
+              <label>&nbsp;</label>
+              <button onClick={splitDistributor} className="btn-primary">Create Packs</button>
+            </div>
           </div>
 
           <div className="distributor-form">
             <h4>List Pack (Public/Private)</h4>
-            <input
-              placeholder="packId"
-              value={packListForm.packId}
-              onChange={(e) =>
-                setPackListForm({ ...packListForm, packId: e.target.value })
-              }
-            />
-            <select
-              value={packListForm.visibility}
-              onChange={(e) =>
-                setPackListForm({ ...packListForm, visibility: e.target.value })
-              }
-            >
-              <option value="1">Public</option>
-              <option value="0">Private</option>
-            </select>
-            <input
-              placeholder="private address (if private)"
-              value={packListForm.privateAddr}
-              onChange={(e) =>
-                setPackListForm({ ...packListForm, privateAddr: e.target.value })
-              }
-            />
-            <button onClick={listPack}>List Pack</button>
+            <div className="form-field">
+              <label>Pack ID</label>
+              <input
+                placeholder="Enter pack ID"
+                value={packListForm.packId}
+                onChange={(e) =>
+                  setPackListForm({ ...packListForm, packId: e.target.value })
+                }
+              />
+            </div>
+            <div className="form-field">
+              <label>Visibility</label>
+              <select
+                value={packListForm.visibility}
+                onChange={(e) =>
+                  setPackListForm({ ...packListForm, visibility: e.target.value })
+                }
+              >
+                <option value="1">🌍 Public</option>
+                <option value="0">🔒 Private</option>
+              </select>
+            </div>
+            <div className="form-field">
+              <label>Private Address (if private)</label>
+              <input
+                placeholder="Enter private buyer address"
+                value={packListForm.privateAddr}
+                onChange={(e) =>
+                  setPackListForm({ ...packListForm, privateAddr: e.target.value })
+                }
+              />
+            </div>
+            <div className="form-field">
+              <label>&nbsp;</label>
+              <button onClick={listPack} className="btn-primary">List Pack</button>
+            </div>
           </div>
         </section>
       )}
@@ -342,17 +459,31 @@ export default function DistributorDashboard({ account }) {
             <p>No pending requests</p>
           ) : (
             pendingRequests.map((r) => (
-              <div key={r.requestId} className="distributor-card">
-                <p>
-                  RequestId: {r.requestId} | PackId: {r.packId} | Requester:{" "}
-                  {r.requester} | Qty: {r.qtyKg} | Paid: {r.amountPaid}
-                </p>
-                <button onClick={() => resolveRequest(r.requestId, true)}>
-                  Accept
-                </button>{" "}
-                <button onClick={() => resolveRequest(r.requestId, false)}>
-                  Reject
-                </button>
+              <div key={r.requestId} className="request-card">
+                <div className="request-header">
+                  <h5>Request #{r.requestId}</h5>
+                </div>
+                <div className="request-details">
+                  <p><strong>Pack ID:</strong> #{r.packId}</p>
+                  <p><strong>Requester:</strong> {r.requester}</p>
+                  <p><strong>Quantity:</strong> {r.qtyKg} kg</p>
+                  <p><strong>Amount Paid:</strong> {r.amountPaid} wei</p>
+                  <p><strong>Wants Retailer Role:</strong> {r.wantsRetailer ? "Yes" : "No"}</p>
+                </div>
+                <div className="request-actions">
+                  <button 
+                    onClick={() => resolveRequest(r.requestId, true)}
+                    className="btn-accept"
+                  >
+                    ✅ Accept
+                  </button>
+                  <button 
+                    onClick={() => resolveRequest(r.requestId, false)}
+                    className="btn-reject"
+                  >
+                    ❌ Reject
+                  </button>
+                </div>
               </div>
             ))
           )}

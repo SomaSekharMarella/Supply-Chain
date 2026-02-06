@@ -31,14 +31,34 @@ export default function RetailerDashboard({ account }) {
     try {
       const contract = await getContract(false);
       const arr = await contract.getRetailerInventory(account);
-      const mapped = arr.map((u) => ({
-        unitId: Number(u.unitId),
-        parentPackId: Number(u.parentPackId),
-        qty: Number(u.quantityKg),
-        pricePerKg: Number(u.pricePerKg),
-        available: u.available,
-        ipfs: u.ipfsHash,
-      }));
+      
+      const mapped = await Promise.all(
+        arr.map(async (u) => {
+          let cropName = "Unknown Product";
+          let location = "Unknown";
+          try {
+            const trace = await contract.getUnitTrace(Number(u.unitId));
+            if (trace[0].batchId !== 0) {
+              cropName = trace[0].cropName || "Unknown Product";
+              location = trace[0].location || "Unknown";
+            }
+          } catch (err) {
+            console.warn("Could not fetch trace for unit:", u.unitId, err);
+          }
+          
+          return {
+            unitId: Number(u.unitId),
+            parentPackId: Number(u.parentPackId),
+            qty: Number(u.quantityKg),
+            pricePerKg: Number(u.pricePerKg),
+            available: u.available,
+            ipfs: u.ipfsHash,
+            cropName: cropName,
+            location: location,
+          };
+        })
+      );
+      
       setRetailerInventory(mapped);
     } catch (err) {
       console.error(err);
@@ -148,16 +168,30 @@ export default function RetailerDashboard({ account }) {
       <section className="section">
         <h3>Public Distributor Packs (to buy more)</h3>
         <button className="btn-primary" onClick={loadPublicPacks}>Refresh</button>
-        <div className="card-list">
-          {publicPacks.map((p) => (
-            <div key={p.packId} className="card">
-              <p>PackId: {p.packId}</p>
-              <p>Distributor: {p.distributor}</p>
-              <p>Qty: {p.qty} Kg</p>
-              <p>Price/Kg: {p.pricePerKg}</p>
-            </div>
-          ))}
-        </div>
+        {publicPacks.length === 0 ? (
+          <div className="empty-state">
+            <p>No public distributor packs available</p>
+          </div>
+        ) : (
+          <div className="card-list">
+            {publicPacks.map((p) => {
+              // Try to get product name - would need to trace back
+              return (
+                <div key={p.packId} className="card">
+                  <div className="card-header">
+                    <h4>Pack #{p.packId}</h4>
+                  </div>
+                  <div className="card-details">
+                    <p><strong>Distributor:</strong> {p.distributor}</p>
+                    <p><strong>Quantity:</strong> {p.qty} kg</p>
+                    <p><strong>Price per Kg:</strong> {p.pricePerKg} wei</p>
+                    {p.ipfs && <p><strong>IPFS:</strong> <small>{p.ipfs}</small></p>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
         <div className="form">
           <div className="form-field">
             <label>Pack ID</label>
@@ -198,16 +232,32 @@ export default function RetailerDashboard({ account }) {
       <section className="section">
         <h3>Your Inventory</h3>
         <button className="btn-primary" onClick={loadInventory}>Refresh</button>
-        <div className="card-list">
-          {retailerInventory.map((u) => (
-            <div key={u.unitId} className="card">
-              <p>UnitId: {u.unitId}</p>
-              <p>Qty: {u.qty} Kg</p>
-              <p>Price/Kg: {u.pricePerKg}</p>
-              <p>Available: {u.available ? "Yes" : "No"}</p>
-            </div>
-          ))}
-        </div>
+        {retailerInventory.length === 0 ? (
+          <div className="empty-state">
+            <p>No units in inventory</p>
+          </div>
+        ) : (
+          <div className="card-list">
+            {retailerInventory.map((u) => (
+              <div key={u.unitId} className="card">
+                <div className="card-header">
+                  <h4>{u.cropName}</h4>
+                  <span className={`status-badge ${u.available ? "available" : "unavailable"}`}>
+                    {u.available ? "Available" : "Unavailable"}
+                  </span>
+                </div>
+                <div className="card-details">
+                  <p><strong>Unit ID:</strong> #{u.unitId}</p>
+                  <p><strong>Parent Pack ID:</strong> #{u.parentPackId}</p>
+                  <p><strong>Quantity:</strong> {u.qty} kg</p>
+                  <p><strong>Price per Kg:</strong> {u.pricePerKg} wei</p>
+                  <p><strong>Location:</strong> {u.location}</p>
+                  {u.ipfs && <p><strong>IPFS:</strong> <small>{u.ipfs}</small></p>}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Split Unit */}
@@ -276,17 +326,28 @@ export default function RetailerDashboard({ account }) {
       <section className="section">
         <h3>Purchase History</h3>
         <button className="btn-primary" onClick={loadPurchaseHistory}>Refresh</button>
-        <div className="card-list">
-          {purchaseHistory.map((p) => (
-            <div key={p.purchaseId} className="card">
-              <p>PurchaseId: {p.purchaseId}</p>
-              <p>Unit: {p.unitId}</p>
-              <p>Buyer: {p.buyer}</p>
-              <p>Seller: {p.seller}</p>
-              <p>Qty: {p.qty} Kg</p>
-            </div>
-          ))}
-        </div>
+        {purchaseHistory.length === 0 ? (
+          <div className="empty-state">
+            <p>No purchase history</p>
+          </div>
+        ) : (
+          <div className="card-list">
+            {purchaseHistory.map((p) => (
+              <div key={p.purchaseId} className="card">
+                <div className="card-header">
+                  <h4>Purchase #{p.purchaseId}</h4>
+                </div>
+                <div className="card-details">
+                  <p><strong>Unit ID:</strong> #{p.unitId}</p>
+                  <p><strong>Buyer:</strong> {p.buyer}</p>
+                  <p><strong>Seller:</strong> {p.seller}</p>
+                  <p><strong>Quantity:</strong> {p.qty} kg</p>
+                  <p><strong>Price per Kg:</strong> {p.pricePerKg} wei</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );
