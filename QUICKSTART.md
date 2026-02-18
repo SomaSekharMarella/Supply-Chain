@@ -2,10 +2,7 @@
 
 ## Prerequisites
 
-Before you begin, ensure you have the following installed:
 
-- **Node.js** (v16 or higher) - [Download](https://nodejs.org/)
-- **npm** or **yarn** package manager
 - **MetaMask** browser extension - [Install MetaMask](https://metamask.io/)
 - **Git** (optional, for cloning)
 
@@ -32,7 +29,6 @@ Create a `.env` file in the `agri-supply-chain` directory:
 ```env
 ALCHEMY_SEPOLIA_URL=your_alchemy_sepolia_url
 PRIVATE_KEY=your_wallet_private_key
-ETHERSCAN_API_KEY=your_etherscan_api_key (optional)
 ```
 
 ### 3. Deploy Smart Contract (Optional - Contract Already Deployed)
