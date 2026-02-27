@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from "react";
 import { getContractInstance } from "../Contract";
+import { encodeImageCids, getProductImageUrls, uploadImagesToFilebase } from "../utils/ipfs";
 import "../styles/FarmerDashboard.css";
 
 export default function FarmerDashboard({ account, roleId }) {
@@ -12,6 +13,7 @@ export default function FarmerDashboard({ account, roleId }) {
   const [myProducts, setMyProducts] = useState([]);
   const [activeTab, setActiveTab] = useState("add"); // "add" or "view"
   const [loading, setLoading] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
 
   useEffect(() => {
     if (activeTab === "view") {
@@ -26,7 +28,9 @@ export default function FarmerDashboard({ account, roleId }) {
     try {
       setLoading(true);
       setError("");
-      const contract = await getContractInstance(false);
+      // Must use signer so msg.sender is the farmer address,
+      // otherwise the role check in getMyProducts() will revert.
+      const contract = await getContractInstance(true);
       const products = await contract.getMyProducts();
       
       const mapped = products.map((p) => ({
@@ -39,6 +43,7 @@ export default function FarmerDashboard({ account, roleId }) {
         location: p.location,
         visibility: Number(p.visibility) === 1 ? "Public" : "Private",
         ipfsHash: p.ipfsHash,
+        imageUrls: getProductImageUrls(p.ipfsHash),
         createdAt: Number(p.createdAt),
         active: p.active,
       }));
@@ -67,7 +72,16 @@ export default function FarmerDashboard({ account, roleId }) {
         return;
       }
 
+      const imageFiles = Array.from(form.images.files || []);
+      if (imageFiles.length < 1 || imageFiles.length > 3) {
+        setError("Please upload minimum 1 and maximum 3 product images.");
+        return;
+      }
+
       const contract = await getContractInstance(true);
+      setUploadingImages(true);
+      const imageCids = await uploadImagesToFilebase(imageFiles);
+      const storedImageValue = encodeImageCids(imageCids);
 
       const tx = await contract.addProduct(
         form.crop.value,
@@ -77,7 +91,7 @@ export default function FarmerDashboard({ account, roleId }) {
         Number(form.price.value),
         form.location.value,
         Number(form.visibility.value),
-        form.ipfs.value
+        storedImageValue
       );
 
       await tx.wait();
@@ -91,6 +105,8 @@ export default function FarmerDashboard({ account, roleId }) {
     } catch (err) {
       console.error("Add product failed:", err);
       setError("Failed to add product: " + (err?.message || err));
+    } finally {
+      setUploadingImages(false);
     }
   }
 
@@ -218,18 +234,21 @@ export default function FarmerDashboard({ account, roleId }) {
                 </select>
               </div>
               <div className="form-group">
-                <label htmlFor="ipfs">IPFS Hash (optional)</label>
+                <label htmlFor="images">Product Images (1 to 3) *</label>
                 <input
-                  id="ipfs"
-                  name="ipfs"
-                  placeholder="QmHash..."
+                  id="images"
+                  name="images"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  required
                   className="form-input"
                 />
               </div>
             </div>
 
-            <button type="submit" className="submit-button">
-              🌱 Add Product
+            <button type="submit" className="submit-button" disabled={uploadingImages}>
+              {uploadingImages ? "⏳ Uploading images..." : "🌱 Add Product"}
             </button>
           </form>
         </section>
@@ -298,6 +317,21 @@ export default function FarmerDashboard({ account, roleId }) {
                       <div className="ipfs-info">
                         <span className="label">IPFS Hash:</span>
                         <span className="ipfs-hash">{product.ipfsHash}</span>
+                      </div>
+                    )}
+                    {product.imageUrls.length > 0 && (
+                      <div className="detail-row">
+                        <span className="label">Images:</span>
+                        <div className="value">
+                          {product.imageUrls.map((url) => (
+                            <img
+                              key={url}
+                              src={url}
+                              alt={product.cropName}
+                              style={{ width: 90, height: 90, objectFit: "cover", marginRight: 8, borderRadius: 6 }}
+                            />
+                          ))}
+                        </div>
                       </div>
                     )}
                     <div className="detail-row">

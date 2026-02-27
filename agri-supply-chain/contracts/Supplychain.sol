@@ -64,6 +64,7 @@ contract SupplyChain is Ownable, ReentrancyGuard {
         uint256 quantityKg;
         uint256 pricePerKg; // price per kg for customers
         bool available;
+        bool listedForCustomers; // true only after retailer explicitly lists the unit
         string ipfsHash;
         uint256 createdAt;
     }
@@ -466,6 +467,7 @@ contract SupplyChain is Ownable, ReentrancyGuard {
         ru.quantityKg = br.qtyKg;
         ru.pricePerKg = p.pricePerKg; // by default same as pack price; retailer can re-sell with different price using splitRetailPack
         ru.available = true;
+        ru.listedForCustomers = false; // retailer must list explicitly before customers can buy
         ru.ipfsHash = "";
         ru.createdAt = block.timestamp;
         // assign global Retailer role if requested and not already a retailer
@@ -531,6 +533,7 @@ contract SupplyChain is Ownable, ReentrancyGuard {
             nu.quantityKg = unitQuantities[i];
             nu.pricePerKg = unitPricesPerKg[i];
             nu.available = true;
+            nu.listedForCustomers = false; // each split unit requires explicit listing
             nu.ipfsHash = ipfsHashes[i];
             nu.createdAt = block.timestamp;
             emit RetailUnitCreated(nu.unitId, root.parentPackId, msg.sender, nu.quantityKg, nu.pricePerKg, block.timestamp);
@@ -544,6 +547,7 @@ contract SupplyChain is Ownable, ReentrancyGuard {
         require(u.unitId != 0, "SupplyChain: unit not found");
         require(u.retailer == msg.sender, "SupplyChain: not owner");
         u.available = true;
+        u.listedForCustomers = true;
         emit UnitListed(unitId, 1, block.timestamp);
     }
     /// @notice Get retailer inventory (units)
@@ -569,7 +573,7 @@ contract SupplyChain is Ownable, ReentrancyGuard {
     /// @notice Buy a retail unit (payable)
     function buyRetailUnit(uint256 unitId, uint256 qtyKg) external payable nonReentrant {
     RetailUnit storage u = retailUnits[unitId];
-    require(u.unitId != 0 && u.available, "SupplyChain: unit not available");
+    require(u.unitId != 0 && u.available && u.listedForCustomers, "SupplyChain: unit not available");
     require(qtyKg > 0 && qtyKg <= u.quantityKg, "SupplyChain: invalid qty");
 
     uint256 total = qtyKg * u.pricePerKg;
@@ -598,6 +602,7 @@ contract SupplyChain is Ownable, ReentrancyGuard {
     u.quantityKg -= qtyKg;
     if (u.quantityKg == 0) {
         u.available = false;
+        u.listedForCustomers = false;
     }
 
     emit UnitPurchased(

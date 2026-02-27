@@ -1,6 +1,7 @@
 // src/components/RetailerDashboard.jsx
 import React, { useEffect, useState } from "react";
 import { getContract, getContractInstance } from "../Contract";
+import { getProductImageUrls } from "../utils/ipfs";
 // removed unused ethers import
 import "../styles/RetailerDashboard.css";
 
@@ -36,11 +37,13 @@ export default function RetailerDashboard({ account }) {
         arr.map(async (u) => {
           let cropName = "Unknown Product";
           let location = "Unknown";
+          let imageUrls = [];
           try {
             const trace = await contract.getUnitTrace(Number(u.unitId));
             if (trace[0].batchId !== 0) {
               cropName = trace[0].cropName || "Unknown Product";
               location = trace[0].location || "Unknown";
+              imageUrls = getProductImageUrls(trace[0].ipfsHash);
             }
           } catch (err) {
             console.warn("Could not fetch trace for unit:", u.unitId, err);
@@ -55,6 +58,8 @@ export default function RetailerDashboard({ account }) {
             ipfs: u.ipfsHash,
             cropName: cropName,
             location: location,
+            listedForCustomers: Boolean(u.listedForCustomers),
+            imageUrls: imageUrls,
           };
         })
       );
@@ -122,12 +127,32 @@ export default function RetailerDashboard({ account }) {
       for (let i = 1; i <= total; i++) {
         const p = await contract.retailPacks(i);
         if (p.packId !== 0 && Number(p.visibility) === 1 && p.available) {
+          let cropName = "Unknown Product";
+          let location = "Unknown";
+          let imageUrls = [];
+          try {
+            const distributorBatch = await contract.distributorBatches(Number(p.distributorBatchId));
+            if (distributorBatch.batchId !== 0) {
+              const farmerProduct = await contract.farmerProducts(Number(distributorBatch.originBatchId));
+              if (farmerProduct.batchId !== 0) {
+                cropName = farmerProduct.cropName || "Unknown Product";
+                location = farmerProduct.location || "Unknown";
+                imageUrls = getProductImageUrls(farmerProduct.ipfsHash);
+              }
+            }
+          } catch (err) {
+            console.warn("Could not load pack product details:", err);
+          }
+
           arr.push({
             packId: Number(p.packId),
             distributor: p.distributor,
             qty: Number(p.quantityKg),
             pricePerKg: Number(p.pricePerKg),
             ipfs: p.ipfsHash,
+            cropName: (cropName || "").trim(),
+            location,
+            imageUrls,
           });
         }
       }
@@ -175,16 +200,29 @@ export default function RetailerDashboard({ account }) {
         ) : (
           <div className="card-list">
             {publicPacks.map((p) => {
-              // Try to get product name - would need to trace back
+              const displayName =
+                (p.cropName || "").trim() || `Product (Pack #${p.packId})`;
               return (
                 <div key={p.packId} className="card">
                   <div className="card-header">
-                    <h4>Pack #{p.packId}</h4>
+                    <h4>{displayName}</h4>
                   </div>
                   <div className="card-details">
+                    <p><strong>Pack ID:</strong> #{p.packId}</p>
+                    <p><strong>Product:</strong> {displayName}</p>
                     <p><strong>Distributor:</strong> {p.distributor}</p>
                     <p><strong>Quantity:</strong> {p.qty} kg</p>
                     <p><strong>Price per Kg:</strong> {p.pricePerKg} wei</p>
+                    <p><strong>Location:</strong> {p.location}</p>
+                    {p.imageUrls?.[0] && (
+                      <p>
+                        <img
+                          src={p.imageUrls[0]}
+                          alt={p.cropName}
+                          style={{ width: 120, height: 90, objectFit: "cover", borderRadius: 6 }}
+                        />
+                      </p>
+                    )}
                     {p.ipfs && <p><strong>IPFS:</strong> <small>{p.ipfs}</small></p>}
                   </div>
                 </div>
@@ -252,6 +290,16 @@ export default function RetailerDashboard({ account }) {
                   <p><strong>Quantity:</strong> {u.qty} kg</p>
                   <p><strong>Price per Kg:</strong> {u.pricePerKg} wei</p>
                   <p><strong>Location:</strong> {u.location}</p>
+                  <p><strong>Listed for Customers:</strong> {u.listedForCustomers ? "Yes" : "No"}</p>
+                  {u.imageUrls?.[0] && (
+                    <p>
+                      <img
+                        src={u.imageUrls[0]}
+                        alt={u.cropName}
+                        style={{ width: 120, height: 90, objectFit: "cover", borderRadius: 6 }}
+                      />
+                    </p>
+                  )}
                   {u.ipfs && <p><strong>IPFS:</strong> <small>{u.ipfs}</small></p>}
                 </div>
               </div>

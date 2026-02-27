@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { getContract, getContractInstance } from "../Contract";
 import { ethers } from "ethers";
+import { getProductImageUrls } from "../utils/ipfs";
 import "../styles/CustomerDashboard.css";
 
 // Product Card Component with Buy Functionality
@@ -16,6 +17,15 @@ function ProductCard({ unit, onBuy, isBuying }) {
         <span className="unit-badge">Unit #{unit.unitId}</span>
       </div>
       <div className="product-details">
+        {unit.imageUrls?.[0] && (
+          <div className="detail-row">
+            <img
+              src={unit.imageUrls[0]}
+              alt={unit.cropName}
+              style={{ width: 140, height: 100, objectFit: "cover", borderRadius: 8 }}
+            />
+          </div>
+        )}
         <div className="detail-row">
           <span className="label">📍 Location:</span>
           <span className="value">{unit.location}</span>
@@ -108,15 +118,17 @@ export default function CustomerDashboard({ account }) {
       
       for (let i = 1; i <= total; i++) {
         const u = await contract.retailUnits(i);
-        if (Number(u.unitId) !== 0 && u.available) {
+        if (Number(u.unitId) !== 0 && u.available && u.listedForCustomers) {
           // Get trace to find product name
           let cropName = "Unknown Product";
           let location = "Unknown";
+          let imageUrls = [];
           try {
             const trace = await contract.getUnitTrace(Number(u.unitId));
             if (trace[0].batchId !== 0) {
               cropName = trace[0].cropName || "Unknown Product";
               location = trace[0].location || "Unknown";
+              imageUrls = getProductImageUrls(trace[0].ipfsHash);
             }
           } catch (err) {
             console.warn("Could not fetch trace for unit:", i, err);
@@ -130,6 +142,7 @@ export default function CustomerDashboard({ account }) {
             ipfs: u.ipfsHash,
             cropName: cropName,
             location: location,
+            imageUrls: imageUrls,
           });
         }
       }
@@ -275,12 +288,32 @@ export default function CustomerDashboard({ account }) {
       for (let i = 1; i <= total; i++) {
         const p = await contract.retailPacks(i);
         if (Number(p.packId) !== 0 && Number(p.visibility) === 1 && p.available) {
+          let cropName = "Unknown Product";
+          let location = "Unknown";
+          let imageUrls = [];
+          try {
+            const distributorBatch = await contract.distributorBatches(Number(p.distributorBatchId));
+            if (distributorBatch.batchId !== 0) {
+              const farmerProduct = await contract.farmerProducts(Number(distributorBatch.originBatchId));
+              if (farmerProduct.batchId !== 0) {
+                cropName = farmerProduct.cropName || "Unknown Product";
+                location = farmerProduct.location || "Unknown";
+                imageUrls = getProductImageUrls(farmerProduct.ipfsHash);
+              }
+            }
+          } catch (err) {
+            console.warn("Could not load pack product details:", err);
+          }
+
           arr.push({
             packId: Number(p.packId),
             distributor: shorten(p.distributor),
             qty: Number(p.quantityKg),
             pricePerKg: Number(p.pricePerKg),
             ipfs: p.ipfsHash,
+            cropName: (cropName || "").trim(),
+            location,
+            imageUrls,
           });
         }
       }
@@ -322,6 +355,110 @@ export default function CustomerDashboard({ account }) {
       <p>
         Customer: <b>{account}</b>
       </p>
+
+      {/* Distributor Packs + Retailer Role Request */}
+      <section>
+        <div className="section-header">
+          <h3>📦 Public Distributor Packs</h3>
+          <button onClick={loadPublicPacks} className="refresh-button">🔄 Refresh</button>
+        </div>
+        <p className="section-description">
+          Buy from a distributor and enable <b>Wants Retailer Role</b> to become a retailer after distributor approval.
+        </p>
+
+        {publicPacks.length === 0 ? (
+          <div className="empty-state">
+            <p>No public distributor packs available.</p>
+          </div>
+        ) : (
+          <div className="products-grid">
+            {publicPacks.map((p) => {
+              const displayName =
+                (p.cropName || "").trim() || `Product (Pack #${p.packId})`;
+              return (
+              <div key={p.packId} className="product-card">
+                <div className="product-header">
+                  <h4>{displayName}</h4>
+                  <span className="unit-badge">Pack #{p.packId}</span>
+                </div>
+                <div className="product-details">
+                  {p.imageUrls?.[0] && (
+                    <div className="detail-row">
+                      <img
+                        src={p.imageUrls[0]}
+                        alt={p.cropName}
+                        style={{ width: 140, height: 100, objectFit: "cover", borderRadius: 8 }}
+                      />
+                    </div>
+                  )}
+                  <div className="detail-row">
+                    <span className="label">🌾 Product:</span>
+                    <span className="value">{displayName}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="label">📍 Location:</span>
+                    <span className="value">{p.location}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="label">📦 Available:</span>
+                    <span className="value">{p.qty} kg</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="label">💰 Price per Kg:</span>
+                    <span className="value">{p.pricePerKg} wei</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="label">🚚 Distributor:</span>
+                    <span className="value">{p.distributor}</span>
+                  </div>
+                </div>
+              </div>
+            )})}
+          </div>
+        )}
+
+        <div className="form">
+          <div className="form-field">
+            <label>Pack ID</label>
+            <input
+              placeholder="Enter distributor pack ID"
+              value={buyRequestForm.packId}
+              onChange={(e) => setBuyRequestForm({ ...buyRequestForm, packId: e.target.value })}
+            />
+          </div>
+          <div className="form-field">
+            <label>Quantity (Kg)</label>
+            <input
+              type="number"
+              placeholder="Enter quantity"
+              value={buyRequestForm.qty}
+              onChange={(e) => setBuyRequestForm({ ...buyRequestForm, qty: e.target.value })}
+            />
+          </div>
+          <div className="form-field">
+            <label>
+              <input
+                type="checkbox"
+                checked={buyRequestForm.wantsRetailer}
+                onChange={(e) =>
+                  setBuyRequestForm({ ...buyRequestForm, wantsRetailer: e.target.checked })
+                }
+              />{" "}
+              Wants Retailer Role
+            </label>
+          </div>
+          <div className="form-field">
+            <label>&nbsp;</label>
+            <button
+              onClick={createBuyRequest}
+              disabled={!buyRequestForm.packId || !buyRequestForm.qty}
+              className="btn-primary"
+            >
+              📝 Create Buy Request
+            </button>
+          </div>
+        </div>
+      </section>
 
       {/* Available Retail Units */}
       <section>

@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { getContract, getContractInstance } from "../Contract";
 import { ethers } from "ethers";
+import { getProductImageUrls } from "../utils/ipfs";
 import "../styles/DistributorDashboard.css";
 
 export default function DistributorDashboard({ account }) {
@@ -51,6 +52,7 @@ export default function DistributorDashboard({ account }) {
             qty: Number(p.quantityKg),
             pricePerKg: Number(p.pricePerKg),
             ipfs: p.ipfsHash,
+            imageUrls: getProductImageUrls(p.ipfsHash),
           });
         }
       }
@@ -92,11 +94,13 @@ export default function DistributorDashboard({ account }) {
         res[0].map(async (b) => {
           let cropName = "Unknown";
           let location = "Unknown";
+          let imageUrls = [];
           try {
             const farmerProduct = await contract.farmerProducts(Number(b.originBatchId));
             if (farmerProduct.batchId !== 0) {
               cropName = farmerProduct.cropName || "Unknown";
               location = farmerProduct.location || "Unknown";
+              imageUrls = getProductImageUrls(farmerProduct.ipfsHash);
             }
           } catch (err) {
             console.warn("Could not fetch farmer product:", err);
@@ -110,6 +114,7 @@ export default function DistributorDashboard({ account }) {
             active: b.active,
             cropName: cropName,
             location: location,
+            imageUrls: imageUrls,
           };
         })
       );
@@ -119,6 +124,7 @@ export default function DistributorDashboard({ account }) {
         res[1].map(async (p) => {
           let cropName = "Unknown";
           let location = "Unknown";
+          let imageUrls = [];
           try {
             const distributorBatch = await contract.distributorBatches(Number(p.distributorBatchId));
             if (distributorBatch.batchId !== 0) {
@@ -126,6 +132,7 @@ export default function DistributorDashboard({ account }) {
               if (farmerProduct.batchId !== 0) {
                 cropName = farmerProduct.cropName || "Unknown";
                 location = farmerProduct.location || "Unknown";
+                imageUrls = getProductImageUrls(farmerProduct.ipfsHash);
               }
             }
           } catch (err) {
@@ -142,6 +149,7 @@ export default function DistributorDashboard({ account }) {
             privateBuyer: p.privateBuyer,
             cropName: cropName,
             location: location,
+            imageUrls: imageUrls,
           };
         })
       );
@@ -261,6 +269,15 @@ export default function DistributorDashboard({ account }) {
                     <p><strong>Quantity:</strong> {p.qty} kg</p>
                     <p><strong>Price per Kg:</strong> {p.pricePerKg} wei</p>
                     <p><strong>Farmer:</strong> {p.farmer}</p>
+                    {p.imageUrls?.[0] && (
+                      <p>
+                        <img
+                          src={p.imageUrls[0]}
+                          alt={p.cropName}
+                          style={{ width: 120, height: 90, objectFit: "cover", borderRadius: 6 }}
+                        />
+                      </p>
+                    )}
                     {p.ipfs && <p><strong>IPFS:</strong> <small>{p.ipfs}</small></p>}
                   </div>
                 </div>
@@ -323,6 +340,15 @@ export default function DistributorDashboard({ account }) {
                       <p><strong>Quantity:</strong> {b.qty} kg</p>
                       <p><strong>Purchase Price:</strong> {b.purchasePrice} wei/kg</p>
                       <p><strong>Location:</strong> {b.location}</p>
+                      {b.imageUrls?.[0] && (
+                        <p>
+                          <img
+                            src={b.imageUrls[0]}
+                            alt={b.cropName}
+                            style={{ width: 120, height: 90, objectFit: "cover", borderRadius: 6 }}
+                          />
+                        </p>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -348,6 +374,15 @@ export default function DistributorDashboard({ account }) {
                       <p><strong>Price per Kg:</strong> {p.pricePerKg} wei</p>
                       <p><strong>Location:</strong> {p.location}</p>
                       <p><strong>Visibility:</strong> {p.visibility === 1 ? "🌍 Public" : "🔒 Private"}</p>
+                      {p.imageUrls?.[0] && (
+                        <p>
+                          <img
+                            src={p.imageUrls[0]}
+                            alt={p.cropName}
+                            style={{ width: 120, height: 90, objectFit: "cover", borderRadius: 6 }}
+                          />
+                        </p>
+                      )}
                     </div>
                   </div>
                 ))}

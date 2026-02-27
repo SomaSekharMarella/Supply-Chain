@@ -8,7 +8,7 @@ import { ethers } from "ethers";
 import SupplyChainAbi from "./apis/SupplyChain.json";
 
 // Contract configuration
-export const CONTRACT_ADDRESS = "0x4f461A14E525DF4af4869a2f3Cf03c8905BD072A";
+export const CONTRACT_ADDRESS = "0x7d02bB85f6a9A6463f240B701B73e223344153a5";
 export const CONTRACT_ABI = SupplyChainAbi.abi;
 
 /**
