@@ -1,0 +1,13 @@
+{
+  "framework": "vite",
+  "installCommand": "cd agri-frontend && npm install",
+  "buildCommand": "cd agri-frontend && npm run build",
+  "outputDirectory": "agri-frontend/dist",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
+  ]
+}
+
