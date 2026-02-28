@@ -1,12 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { ethers } from "ethers";
 import { QRCodeCanvas } from "qrcode.react";
-import {
-  CONTRACT_ADDRESS,
-  getUnitTraceReadOnly,
-} from "../Contract";
+import { CONTRACT_ADDRESS, getUnitTraceReadOnly } from "../Contract";
 import { getProductImageUrls } from "../utils/ipfs";
+import { getPublicBaseUrl } from "../utils/url";
 import "../styles/TraceUnitPage.css";
 
 function shorten(addr) {
@@ -135,13 +132,9 @@ export default function TraceUnitPage() {
     }
   }, [unitId]);
 
-  const origin =
-    typeof window !== "undefined" && window.location?.origin
-      ? window.location.origin
-      : "";
-
   const networkParam = searchParams.get("network") || "sepolia";
-  const shareUrl = `${origin}/trace/unit/${unitId}?network=${networkParam}&contract=${CONTRACT_ADDRESS}`;
+  const baseUrl = getPublicBaseUrl();
+  const shareUrl = `${baseUrl}/trace/unit/${unitId}?network=${networkParam}&contract=${CONTRACT_ADDRESS}`;
 
   if (loading) {
     return (
