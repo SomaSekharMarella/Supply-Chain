@@ -6,6 +6,7 @@
 
 import React, { useEffect, useState } from "react";
 import { ethers } from "ethers";
+import { Routes, Route } from "react-router-dom";
 import { getContract, getContractInstance } from "./Contract";
 
 import "./App.css";
@@ -17,10 +18,11 @@ import FarmerDashboard from "./components/FarmerDashboard";
 import DistributorDashboard from "./components/DistributorDashboard";
 import RetailerDashboard from "./components/RetailerDashboard";
 import CustomerDashboard from "./components/CustomerDashboard";
+import TraceUnitPage from "./components/TraceUnitPage";
 
 
 /**
- * @description Main App component
+ * @description Main App component (wallet-gated dashboards)
  * @returns {JSX.Element} The main application component
  */
 function App() {
@@ -228,7 +230,19 @@ function App() {
   );
 }
 
-export default App;
+/**
+ * @description Root app with routing. Public trace route bypasses wallet gating.
+ */
+function RootApp() {
+  return (
+    <Routes>
+      <Route path="/trace/unit/:unitId" element={<TraceUnitPage />} />
+      <Route path="/*" element={<App />} />
+    </Routes>
+  );
+}
+
+export default RootApp;
 
 /**
  * @description Component for requesting roles or viewing as customer

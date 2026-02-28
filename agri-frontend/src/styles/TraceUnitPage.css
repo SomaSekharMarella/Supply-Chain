@@ -1,0 +1,268 @@
+.trace-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.trace-card {
+  width: 100%;
+  max-width: 1100px;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  border-radius: 20px;
+  box-shadow: var(--shadow-lg);
+  padding: 2rem;
+}
+
+.trace-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.trace-header h1 {
+  font-size: 2rem;
+  margin: 0.5rem 0 0.25rem 0;
+}
+
+.trace-subtitle {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.trace-back-button {
+  align-self: flex-start;
+  margin-bottom: 0.5rem;
+  background: #007aff !important;
+  color: #ffffff !important;
+  padding: 0.5rem 1.25rem !important;
+  border-radius: 999px !important;
+  font-size: 0.9rem !important;
+}
+
+.trace-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr);
+  gap: 2rem;
+}
+
+.trace-left,
+.trace-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.trace-qr-box {
+  background: var(--bg-secondary);
+  border-radius: 16px;
+  padding: 1.5rem;
+  text-align: center;
+  border: 1px solid var(--border-color);
+}
+
+.trace-qr-caption {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.trace-qr-url {
+  margin-top: 0.5rem;
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+  word-break: break-all;
+}
+
+.trace-product-summary {
+  background: linear-gradient(
+    135deg,
+    rgba(45, 134, 89, 0.1) 0%,
+    rgba(45, 134, 89, 0.03) 100%
+  );
+  border-radius: 16px;
+  padding: 1.5rem;
+  border: 1px solid rgba(45, 134, 89, 0.3);
+}
+
+.trace-image-wrapper {
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: center;
+}
+
+.trace-product-image {
+  width: 220px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+}
+
+.trace-product-summary h2 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.4rem;
+}
+
+.trace-location {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.trace-farmer {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.trace-farmer span {
+  font-family: "SF Mono", "Cascadia Code", "Roboto Mono", monospace;
+  color: var(--primary-green);
+}
+
+.trace-price-box {
+  background: var(--bg-tertiary);
+  border-radius: 16px;
+  padding: 1.5rem;
+  border: 1px solid var(--border-color);
+}
+
+.trace-price-box h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+}
+
+.trace-price-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+}
+
+.trace-price-margin {
+  font-weight: 600;
+  color: var(--accent-orange);
+}
+
+.trace-right h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.15rem;
+}
+
+.trace-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.trace-step {
+  position: relative;
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 1.25rem 1.25rem 1rem 1.5rem;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+}
+
+.trace-stage-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--secondary-blue);
+  margin-bottom: 0.75rem;
+}
+
+.trace-step-main {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.trace-participant {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.trace-role {
+  padding: 0.3rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.trace-role.seller {
+  background: rgba(45, 134, 89, 0.1);
+  color: var(--primary-green);
+}
+
+.trace-role.buyer {
+  background: rgba(0, 122, 255, 0.1);
+  color: var(--secondary-blue);
+}
+
+.trace-address {
+  font-family: "SF Mono", "Cascadia Code", "Roboto Mono", monospace;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.trace-arrow {
+  font-size: 1.4rem;
+  color: var(--secondary-blue);
+  font-weight: bold;
+}
+
+.trace-price-badge {
+  margin-left: auto;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  background: var(--secondary-blue);
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.trace-step-timestamp {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+}
+
+.trace-status {
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.trace-error {
+  text-align: center;
+  color: var(--accent-red);
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 900px) {
+  .trace-card {
+    padding: 1.5rem;
+  }
+
+  .trace-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .trace-price-badge {
+    margin-left: 0;
+    margin-top: 0.5rem;
+  }
+}
+

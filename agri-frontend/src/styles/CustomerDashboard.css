@@ -478,6 +478,17 @@
   font-size: 0.85rem;
 }
 
+.trace-actions {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.view-trace-button {
+  background: linear-gradient(135deg, #007aff 0%, #4a90e2 100%) !important;
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.25) !important;
+}
+
 .empty-state {
   text-align: center;
   padding: 3rem;

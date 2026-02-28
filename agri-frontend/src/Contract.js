@@ -11,8 +11,12 @@ import SupplyChainAbi from "./apis/SupplyChain.json";
 export const CONTRACT_ADDRESS = "0x7d02bB85f6a9A6463f240B701B73e223344153a5";
 export const CONTRACT_ABI = SupplyChainAbi.abi;
 
+// Read-only Sepolia RPC configuration
+const SEPOLIA_RPC_URL =
+  import.meta.env.VITE_SEPOLIA_RPC_URL || "https://ethereum-sepolia.publicnode.com";
+
 /**
- * @description Get contract instance with optional signer
+ * @description Get contract instance with optional signer using MetaMask
  * @param {boolean} withSigner - Whether to include signer for transactions
  * @returns {Promise<ethers.Contract>} Contract instance
  * @throws {Error} If MetaMask is not detected
@@ -33,7 +37,7 @@ export async function getContract(withSigner = false) {
 }
 
 /**
- * @description Get contract instance with proper error handling
+ * @description Get contract instance with proper error handling via MetaMask
  * @param {boolean} withSigner - Whether to include signer for transactions
  * @returns {Promise<ethers.Contract>} Contract instance
  */
@@ -45,6 +49,39 @@ export async function getContractInstance(withSigner = false) {
     console.error("Failed to get contract instance:", error);
     throw error;
   }
+}
+
+/**
+ * @description Get a read-only provider using Sepolia RPC (no wallet required)
+ * @returns {ethers.JsonRpcProvider} Read-only provider
+ */
+export function getReadOnlyProvider() {
+  return new ethers.JsonRpcProvider(SEPOLIA_RPC_URL);
+}
+
+/**
+ * @description Get a read-only contract instance (no wallet required)
+ * @returns {ethers.Contract} Read-only contract instance
+ */
+export function getReadOnlyContract() {
+  const provider = getReadOnlyProvider();
+  return new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+}
+
+/**
+ * @description Read-only helper to fetch full unit trace via RPC
+ * @param {number|string|bigint} unitId - Unit ID to trace
+ * @returns {Promise<any>} Trace tuple from the contract
+ */
+export async function getUnitTraceReadOnly(unitId) {
+  const contract = getReadOnlyContract();
+  const id =
+    typeof unitId === "bigint"
+      ? unitId
+      : typeof unitId === "number"
+      ? BigInt(unitId)
+      : BigInt(String(unitId));
+  return contract.getUnitTrace(id);
 }
 
  

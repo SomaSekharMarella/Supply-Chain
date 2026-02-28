@@ -1,5 +1,6 @@
 // src/components/CustomerDashboard.jsx
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { getContract, getContractInstance } from "../Contract";
 import { ethers } from "ethers";
 import { getProductImageUrls } from "../utils/ipfs";
@@ -86,6 +87,7 @@ function ProductCard({ unit, onBuy, isBuying }) {
 }
 
 export default function CustomerDashboard({ account }) {
+  const navigate = useNavigate();
   const [availableUnits, setAvailableUnits] = useState([]);
   const [buyForm, setBuyForm] = useState({ unitId: "", qty: "" });
   const [purchaseHistory, setPurchaseHistory] = useState([]);
@@ -212,7 +214,8 @@ export default function CustomerDashboard({ account }) {
               sellerRole: "Farmer",
               buyer: shorten(distributorBatch.distributor),
               buyerRole: "Distributor",
-              pricePerKg: Number(distributorBatch.purchasePricePerKg),
+              // Show the original farmer's price per kg, not distributor purchase field
+              pricePerKg: Number(farmerProduct.pricePerKg),
               stage: "Farm to Distribution",
               timestamp: Number(distributorBatch.createdAt || 0)
             });
@@ -616,6 +619,15 @@ export default function CustomerDashboard({ account }) {
                     <br />
                     <small>{new Date(p.timestamp * 1000).toLocaleString()}</small>
                   </div>
+                </div>
+                <div className="trace-actions">
+                  <button
+                    type="button"
+                    className="btn-primary view-trace-button"
+                    onClick={() => navigate(`/trace/unit/${p.unitId}`)}
+                  >
+                    View Trace + QR Code
+                  </button>
                 </div>
               </div>
             </div>
