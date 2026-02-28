@@ -70,8 +70,8 @@
 }
 
 .refresh-button {
-  background: #007aff !important;
-  color: #ffffff !important;
+  background: var(--color-primary-light) !important;
+  color: var(--color-primary-hover) !important;
   border: none !important;
   padding: 0.5rem 1rem !important;
   border-radius: 6px !important;
@@ -82,7 +82,7 @@
 }
 
 .refresh-button:hover {
-  background: #0056b3 !important;
+  background: #dbefdf !important;
 }
 
 /* Empty State */
@@ -199,21 +199,21 @@
 }
 
 .approve-button.farmer {
-  background: #2d8659 !important;
+  background: var(--color-primary) !important;
   color: #ffffff !important;
 }
 
 .approve-button.farmer:hover {
-  background: #1f5d3f !important;
+  background: var(--color-primary-hover) !important;
 }
 
 .approve-button.distributor {
-  background: #007aff !important;
-  color: #ffffff !important;
+  background: var(--color-primary-light) !important;
+  color: var(--color-primary-hover) !important;
 }
 
 .approve-button.distributor:hover {
-  background: #0056b3 !important;
+  background: #dbefdf !important;
 }
 
 /* Dashboard Cards */
@@ -302,5 +302,5 @@
 }
 
 .dismiss-error:hover {
-  background: #d70015;
+  background: #c62828;
 }

@@ -4,15 +4,16 @@
   align-items: center;
   justify-content: center;
   padding: 2rem 1rem;
+  background: var(--color-bg-main);
 }
 
 .trace-card {
   width: 100%;
   max-width: 1100px;
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(12px);
-  border-radius: 20px;
-  box-shadow: var(--shadow-lg);
+  background: var(--color-bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
   padding: 2rem;
 }
 
@@ -38,8 +39,9 @@
 .trace-back-button {
   align-self: flex-start;
   margin-bottom: 0.5rem;
-  background: #007aff !important;
-  color: #ffffff !important;
+  background: var(--color-primary-light) !important;
+  color: var(--color-primary-hover) !important;
+  border: 1px solid #cde7d4 !important;
   padding: 0.5rem 1.25rem !important;
   border-radius: 999px !important;
   font-size: 0.9rem !important;
@@ -59,7 +61,7 @@
 }
 
 .trace-qr-box {
-  background: var(--bg-secondary);
+  background: #f5fbf7;
   border-radius: 16px;
   padding: 1.5rem;
   text-align: center;
@@ -82,12 +84,12 @@
 .trace-product-summary {
   background: linear-gradient(
     135deg,
-    rgba(45, 134, 89, 0.1) 0%,
-    rgba(45, 134, 89, 0.03) 100%
+    rgba(76, 175, 80, 0.12) 0%,
+    rgba(76, 175, 80, 0.04) 100%
   );
   border-radius: 16px;
   padding: 1.5rem;
-  border: 1px solid rgba(45, 134, 89, 0.3);
+  border: 1px solid rgba(76, 175, 80, 0.25);
 }
 
 .trace-image-wrapper {
@@ -126,7 +128,7 @@
 }
 
 .trace-price-box {
-  background: var(--bg-tertiary);
+  background: #f6fbf8;
   border-radius: 16px;
   padding: 1.5rem;
   border: 1px solid var(--border-color);
@@ -146,7 +148,7 @@
 
 .trace-price-margin {
   font-weight: 600;
-  color: var(--accent-orange);
+  color: var(--primary-green-dark);
 }
 
 .trace-right h3 {
@@ -174,7 +176,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--secondary-blue);
+  color: var(--primary-green-dark);
   margin-bottom: 0.75rem;
 }
 
@@ -205,8 +207,8 @@
 }
 
 .trace-role.buyer {
-  background: rgba(0, 122, 255, 0.1);
-  color: var(--secondary-blue);
+  background: rgba(76, 175, 80, 0.1);
+  color: var(--primary-green-dark);
 }
 
 .trace-address {
@@ -217,7 +219,7 @@
 
 .trace-arrow {
   font-size: 1.4rem;
-  color: var(--secondary-blue);
+  color: var(--primary-green);
   font-weight: bold;
 }
 
@@ -225,8 +227,8 @@
   margin-left: auto;
   padding: 0.4rem 0.9rem;
   border-radius: 999px;
-  background: var(--secondary-blue);
-  color: #ffffff;
+  background: var(--color-primary-light);
+  color: var(--color-primary-hover);
   font-size: 0.8rem;
   font-weight: 600;
 }

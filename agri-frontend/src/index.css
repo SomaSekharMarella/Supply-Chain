@@ -1,31 +1,82 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
 :root {
-  /* Professional Color Palette */
-  --primary-green: #2d8659;
-  --primary-green-dark: #1f5d3f;
-  --primary-green-light: #3da870;
-  --secondary-blue: #007aff;
-  --secondary-blue-dark: #0056b3;
-  --accent-orange: #ff9500;
-  --accent-red: #ff3b30;
-  
-  /* Neutral Colors */
-  --text-primary: #1d1d1f;
-  --text-secondary: #6e6e73;
-  --text-tertiary: #8e8e93;
-  --bg-primary: #ffffff;
-  --bg-secondary: #f5f5f7;
-  --bg-tertiary: #fafafa;
-  --border-color: #e5e5ea;
-  --border-color-light: #d2d2d7;
-  
-  /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.1);
-  
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  /* New light agri-tech token system */
+  --color-primary: #4caf50;
+  --color-primary-light: #e8f5e9;
+  --color-primary-hover: #43a047;
+  --color-primary-soft: #a5d6a7;
+
+  --color-bg-main: #f9fcfa;
+  --color-bg-card: #ffffff;
+  --color-bg-section: #f1f8f5;
+
+  --color-border: #e8f0eb;
+  --color-divider: #f0f7f4;
+
+  --color-text-primary: #1a3c34;
+  --color-text-secondary: #4a6b5f;
+  --color-text-light: #6b8c7d;
+
+  --color-success: #2e7d32;
+  --color-error: #c62828;
+
+  --font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --text-4xl: 2.5rem;
+  --text-3xl: 2rem;
+  --text-2xl: 1.5rem;
+  --text-xl: 1.25rem;
+  --text-lg: 1.125rem;
+  --text-base: 1rem;
+  --text-sm: 0.875rem;
+  --text-xs: 0.75rem;
+
+  --weight-light: 300;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  --space-3xs: 0.25rem;
+  --space-2xs: 0.5rem;
+  --space-xs: 0.75rem;
+  --space-sm: 1rem;
+  --space-md: 1.5rem;
+  --space-lg: 2rem;
+  --space-xl: 3rem;
+  --space-2xl: 4rem;
+
+  --radius-sm: 0.5rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.5rem;
+
+  --shadow-sm: 0 1px 3px rgba(76, 175, 80, 0.08);
+  --shadow-md: 0 4px 12px rgba(76, 175, 80, 0.1);
+  --shadow-lg: 0 10px 24px rgba(76, 175, 80, 0.12);
+  --shadow-card: 0 6px 20px rgba(76, 175, 80, 0.06);
+
+  /* Legacy aliases to keep existing CSS compatible */
+  --primary-green: var(--color-primary);
+  --primary-green-dark: var(--color-primary-hover);
+  --primary-green-light: var(--color-primary-soft);
+  --secondary-blue: #5ea889;
+  --secondary-blue-dark: #4f9779;
+  --accent-orange: #7aa38d;
+  --accent-red: var(--color-error);
+
+  --text-primary: var(--color-text-primary);
+  --text-secondary: var(--color-text-secondary);
+  --text-tertiary: var(--color-text-light);
+  --bg-primary: var(--color-bg-card);
+  --bg-secondary: var(--color-bg-main);
+  --bg-tertiary: var(--color-bg-section);
+  --border-color: var(--color-border);
+  --border-color-light: #d8e8df;
+
+  font-family: var(--font-family);
   line-height: 1.6;
-  font-weight: 400;
+  font-weight: var(--weight-regular);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -40,6 +91,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background: var(--color-bg-main);
   color: var(--text-primary);
 }
 
@@ -53,8 +105,13 @@ a:hover {
   color: var(--secondary-blue-dark);
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-weight: 600;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: var(--weight-semibold);
   line-height: 1.2;
   color: var(--text-primary);
 }

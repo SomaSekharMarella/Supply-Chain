@@ -90,7 +90,7 @@
 .form-input:focus,
 .form-select:focus {
   outline: none !important;
-  border-color: #2d8659 !important;
+  border-color: var(--color-primary) !important;
   box-shadow: 0 0 0 3px rgba(45, 134, 89, 0.1) !important;
 }
 
@@ -101,7 +101,7 @@
 
 .submit-button {
   width: 100% !important;
-  background: #2d8659 !important;
+  background: var(--color-primary) !important;
   color: #ffffff !important;
   border: none !important;
   padding: 0.875rem 2rem !important;
@@ -114,7 +114,7 @@
 }
 
 .submit-button:hover {
-  background: #1f5d3f !important;
+  background: var(--color-primary-hover) !important;
 }
 
 .error-message {
@@ -146,7 +146,7 @@
 }
 
 .dismiss-error:hover {
-  background: #d70015;
+  background: #b3261e;
 }
 
 /* Tab Navigation */
