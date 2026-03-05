@@ -4,6 +4,7 @@ import { QRCodeCanvas } from "qrcode.react";
 import { CONTRACT_ADDRESS, getUnitTraceReadOnly } from "../Contract";
 import { getProductImageUrls } from "../utils/ipfs";
 import { getPublicBaseUrl } from "../utils/url";
+import { getFarmerBatchExpiry, getExpiryStatus } from "../utils/expiry";
 import "../styles/TraceUnitPage.css";
 
 function shorten(addr) {
@@ -68,6 +69,10 @@ export default function TraceUnitPage() {
           ? getProductImageUrls(farmerProduct.ipfsHash)
           : [];
 
+        const originBatchId = farmerProduct?.batchId != null ? Number(farmerProduct.batchId) : 0;
+        const expiryTs = originBatchId ? getFarmerBatchExpiry(originBatchId) : null;
+        const expiryStatus = getExpiryStatus(expiryTs);
+
         const stages = [];
 
         if (farmerProduct?.batchId !== 0n && distributorBatch?.batchId !== 0n) {
@@ -118,6 +123,8 @@ export default function TraceUnitPage() {
           margin,
           images: farmerImages,
           stages,
+          expiryTimestamp: expiryTs,
+          expiryStatus,
         });
       } catch (err) {
         console.error("Failed to load trace:", err);
@@ -207,6 +214,16 @@ export default function TraceUnitPage() {
               <p className="trace-farmer">
                 Original farmer: <span>{trace.farmer}</span>
               </p>
+              {trace.expiryStatus != null && (trace.expiryStatus.expiryDate != null || trace.expiryStatus.label) && (
+                <p className={`trace-validity ${trace.expiryStatus.expired ? "expired" : ""}`}>
+                  <strong>Validity:</strong>{" "}
+                  {trace.expiryStatus.expired
+                    ? `Expired (was ${trace.expiryStatus.expiryDate ?? "—"})`
+                    : trace.expiryStatus.daysLeft != null && trace.expiryStatus.daysLeft <= 3
+                    ? `${trace.expiryStatus.label} — ${trace.expiryStatus.expiryDate}`
+                    : `Valid until ${trace.expiryStatus.expiryDate ?? "—"}`}
+                </p>
+              )}
             </div>
 
             <div className="trace-price-box">

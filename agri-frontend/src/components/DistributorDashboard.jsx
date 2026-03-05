@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { getContract, getContractInstance } from "../Contract";
 import { ethers } from "ethers";
 import { getProductImageUrls } from "../utils/ipfs";
+import { getFarmerBatchExpiry, getExpiryStatus } from "../utils/expiry";
 import "../styles/DistributorDashboard.css";
 
 export default function DistributorDashboard({ account }) {
@@ -45,14 +46,19 @@ export default function DistributorDashboard({ account }) {
       for (let i = 1; i <= total; i++) {
         const p = await contract.farmerProducts(i);
         if (p.batchId !== 0 && Number(p.visibility) === 1 && p.active) {
+          const batchId = Number(p.batchId);
+          const expiryTs = getFarmerBatchExpiry(batchId);
+          const expiryStatus = getExpiryStatus(expiryTs);
           arr.push({
-            batchId: Number(p.batchId),
+            batchId,
             farmer: p.farmer,
             cropName: p.cropName,
             qty: Number(p.quantityKg),
             pricePerKg: Number(p.pricePerKg),
             ipfs: p.ipfsHash,
             imageUrls: getProductImageUrls(p.ipfsHash),
+            expiryTimestamp: expiryTs,
+            expiryStatus,
           });
         }
       }
@@ -106,15 +112,20 @@ export default function DistributorDashboard({ account }) {
             console.warn("Could not fetch farmer product:", err);
           }
           
+          const originBatchId = Number(b.originBatchId);
+          const expiryTs = getFarmerBatchExpiry(originBatchId);
+          const expiryStatus = getExpiryStatus(expiryTs);
           return {
             batchId: Number(b.batchId),
-            originBatchId: Number(b.originBatchId),
+            originBatchId,
             qty: Number(b.quantityKg),
             purchasePrice: Number(b.purchasePricePerKg),
             active: b.active,
             cropName: cropName,
             location: location,
             imageUrls: imageUrls,
+            expiryTimestamp: expiryTs,
+            expiryStatus,
           };
         })
       );
@@ -125,10 +136,12 @@ export default function DistributorDashboard({ account }) {
           let cropName = "Unknown";
           let location = "Unknown";
           let imageUrls = [];
+          let originBatchId = 0;
           try {
             const distributorBatch = await contract.distributorBatches(Number(p.distributorBatchId));
             if (distributorBatch.batchId !== 0) {
-              const farmerProduct = await contract.farmerProducts(Number(distributorBatch.originBatchId));
+              originBatchId = Number(distributorBatch.originBatchId);
+              const farmerProduct = await contract.farmerProducts(originBatchId);
               if (farmerProduct.batchId !== 0) {
                 cropName = farmerProduct.cropName || "Unknown";
                 location = farmerProduct.location || "Unknown";
@@ -138,7 +151,8 @@ export default function DistributorDashboard({ account }) {
           } catch (err) {
             console.warn("Could not fetch product info:", err);
           }
-          
+          const expiryTs = originBatchId ? getFarmerBatchExpiry(originBatchId) : null;
+          const expiryStatus = getExpiryStatus(expiryTs);
           return {
             packId: Number(p.packId),
             distributorBatchId: Number(p.distributorBatchId),
@@ -150,6 +164,8 @@ export default function DistributorDashboard({ account }) {
             cropName: cropName,
             location: location,
             imageUrls: imageUrls,
+            expiryTimestamp: expiryTs,
+            expiryStatus,
           };
         })
       );
@@ -259,13 +275,25 @@ export default function DistributorDashboard({ account }) {
             </div>
           ) : (
             <div className="products-grid">
-              {publicFarmerProducts.map((p) => (
+              {publicFarmerProducts
+                .filter((p) => !p.expiryStatus?.expired)
+                .map((p) => (
                 <div key={p.batchId} className="product-card">
                   <div className="product-header">
                     <h5>{p.cropName}</h5>
-                    <span className="batch-badge">Batch #{p.batchId}</span>
+                    <div className="badges-row">
+                      <span className="batch-badge">Batch #{p.batchId}</span>
+                      {p.expiryStatus?.label && (
+                        <span className={`expiry-badge ${p.expiryStatus.expired ? "expired" : "expiring"}`}>
+                          {p.expiryStatus.expired ? "Expired" : p.expiryStatus.label}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="product-details">
+                    {p.expiryStatus?.expiryDate && (
+                      <p><strong>Valid until:</strong> {p.expiryStatus.expiryDate}</p>
+                    )}
                     <p><strong>Quantity:</strong> {p.qty} kg</p>
                     <p><strong>Price per Kg:</strong> {p.pricePerKg} wei</p>
                     <p><strong>Farmer:</strong> {p.farmer}</p>
@@ -304,7 +332,18 @@ export default function DistributorDashboard({ account }) {
             </div>
             <div className="form-field">
               <label>&nbsp;</label>
-              <button onClick={buyBatch} className="btn-primary">Buy Batch</button>
+              <button
+                onClick={buyBatch}
+                className="btn-primary"
+                disabled={(() => {
+                  const p = publicFarmerProducts.find((x) => String(x.batchId) === String(selectedBatchId));
+                  return p?.expiryStatus?.expired === true;
+                })()}
+              >
+                {publicFarmerProducts.find((x) => String(x.batchId) === String(selectedBatchId))?.expiryStatus?.expired
+                  ? "Expired"
+                  : "Buy Batch"}
+              </button>
             </div>
           </div>
         </section>
@@ -330,11 +369,21 @@ export default function DistributorDashboard({ account }) {
                   <div key={b.batchId} className="inventory-card">
                     <div className="card-header">
                       <h5>{b.cropName}</h5>
-                      <span className={`status-badge ${b.active ? "active" : "inactive"}`}>
-                        {b.active ? "Active" : "Inactive"}
-                      </span>
+                      <div className="badges-row">
+                        <span className={`status-badge ${b.active ? "active" : "inactive"}`}>
+                          {b.active ? "Active" : "Inactive"}
+                        </span>
+                        {b.expiryStatus?.label && (
+                          <span className={`expiry-badge ${b.expiryStatus.expired ? "expired" : "expiring"}`}>
+                            {b.expiryStatus.expired ? "Expired" : b.expiryStatus.label}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="card-details">
+                      {b.expiryStatus?.expiryDate && (
+                        <p><strong>Valid until:</strong> {b.expiryStatus.expiryDate}</p>
+                      )}
                       <p><strong>Batch ID:</strong> #{b.batchId}</p>
                       <p><strong>Origin Batch:</strong> #{b.originBatchId}</p>
                       <p><strong>Quantity:</strong> {b.qty} kg</p>
@@ -363,11 +412,21 @@ export default function DistributorDashboard({ account }) {
                   <div key={p.packId} className="inventory-card">
                     <div className="card-header">
                       <h5>{p.cropName}</h5>
-                      <span className={`status-badge ${p.available ? "active" : "inactive"}`}>
-                        {p.available ? "Available" : "Unavailable"}
-                      </span>
+                      <div className="badges-row">
+                        <span className={`status-badge ${p.available ? "active" : "inactive"}`}>
+                          {p.available ? "Available" : "Unavailable"}
+                        </span>
+                        {p.expiryStatus?.label && (
+                          <span className={`expiry-badge ${p.expiryStatus.expired ? "expired" : "expiring"}`}>
+                            {p.expiryStatus.expired ? "Expired" : p.expiryStatus.label}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="card-details">
+                      {p.expiryStatus?.expiryDate && (
+                        <p><strong>Valid until:</strong> {p.expiryStatus.expiryDate}</p>
+                      )}
                       <p><strong>Pack ID:</strong> #{p.packId}</p>
                       <p><strong>From Batch:</strong> #{p.distributorBatchId}</p>
                       <p><strong>Quantity:</strong> {p.qty} kg</p>

@@ -4,18 +4,27 @@ import { useNavigate } from "react-router-dom";
 import { getContract, getContractInstance } from "../Contract";
 import { ethers } from "ethers";
 import { getProductImageUrls } from "../utils/ipfs";
+import { getFarmerBatchExpiry, getExpiryStatus } from "../utils/expiry";
 import "../styles/CustomerDashboard.css";
 
 // Product Card Component with Buy Functionality
 function ProductCard({ unit, onBuy, isBuying }) {
   const [qtyInput, setQtyInput] = useState("1");
   const totalPrice = Number(unit.pricePerKg) * Number(qtyInput || 1);
+  const expired = unit.expiryStatus?.expired === true;
 
   return (
     <div className="product-card">
       <div className="product-header">
         <h4>{unit.cropName}</h4>
-        <span className="unit-badge">Unit #{unit.unitId}</span>
+        <div className="badges-row">
+          <span className="unit-badge">Unit #{unit.unitId}</span>
+          {unit.expiryStatus?.label && (
+            <span className={`expiry-badge ${unit.expiryStatus.expired ? "expired" : "expiring"}`}>
+              {unit.expiryStatus.expired ? "Expired" : unit.expiryStatus.label}
+            </span>
+          )}
+        </div>
       </div>
       <div className="product-details">
         {unit.imageUrls?.[0] && (
@@ -43,6 +52,12 @@ function ProductCard({ unit, onBuy, isBuying }) {
           <span className="label">🏪 Retailer:</span>
           <span className="value">{unit.retailer}</span>
         </div>
+        {unit.expiryStatus?.expiryDate && (
+          <div className="detail-row">
+            <span className="label">📅 Valid until:</span>
+            <span className="value">{unit.expiryStatus.expiryDate}</span>
+          </div>
+        )}
       </div>
       
       {/* Purchase Section */}
@@ -62,9 +77,9 @@ function ProductCard({ unit, onBuy, isBuying }) {
             }}
             placeholder="Enter quantity"
             className="qty-input"
-            disabled={isBuying}
+            disabled={isBuying || expired}
           />
-          {qtyInput && Number(qtyInput) > 0 && Number(qtyInput) <= unit.qty && (
+          {qtyInput && Number(qtyInput) > 0 && Number(qtyInput) <= unit.qty && !expired && (
             <div className="price-calculation">
               <span className="total-label">Total Price:</span>
               <span className="total-price">{totalPrice.toLocaleString()} wei</span>
@@ -73,12 +88,13 @@ function ProductCard({ unit, onBuy, isBuying }) {
           {qtyInput && Number(qtyInput) > unit.qty && (
             <div className="error-text">Quantity exceeds available stock</div>
           )}
+          {expired && <div className="error-text">Product expired — not available for purchase</div>}
           <button
             onClick={() => onBuy(unit.unitId, qtyInput || "1")}
-            disabled={isBuying || !qtyInput || Number(qtyInput) <= 0 || Number(qtyInput) > unit.qty}
+            disabled={isBuying || expired || !qtyInput || Number(qtyInput) <= 0 || Number(qtyInput) > unit.qty}
             className="buy-button"
           >
-            {isBuying ? "⏳ Processing..." : "🛒 Buy Now"}
+            {expired ? "Expired" : isBuying ? "⏳ Processing..." : "🛒 Buy Now"}
           </button>
         </div>
       </div>
@@ -125,9 +141,11 @@ export default function CustomerDashboard({ account }) {
           let cropName = "Unknown Product";
           let location = "Unknown";
           let imageUrls = [];
+          let originBatchId = 0;
           try {
             const trace = await contract.getUnitTrace(Number(u.unitId));
             if (trace[0].batchId !== 0) {
+              originBatchId = Number(trace[0].batchId);
               cropName = trace[0].cropName || "Unknown Product";
               location = trace[0].location || "Unknown";
               imageUrls = getProductImageUrls(trace[0].ipfsHash);
@@ -135,7 +153,8 @@ export default function CustomerDashboard({ account }) {
           } catch (err) {
             console.warn("Could not fetch trace for unit:", i, err);
           }
-          
+          const expiryTs = originBatchId ? getFarmerBatchExpiry(originBatchId) : null;
+          const expiryStatus = getExpiryStatus(expiryTs);
           arr.push({
             unitId: Number(u.unitId),
             retailer: shorten(u.retailer),
@@ -145,6 +164,8 @@ export default function CustomerDashboard({ account }) {
             cropName: cropName,
             location: location,
             imageUrls: imageUrls,
+            expiryTimestamp: expiryTs,
+            expiryStatus,
           });
         }
       }
@@ -294,10 +315,12 @@ export default function CustomerDashboard({ account }) {
           let cropName = "Unknown Product";
           let location = "Unknown";
           let imageUrls = [];
+          let originBatchId = 0;
           try {
             const distributorBatch = await contract.distributorBatches(Number(p.distributorBatchId));
             if (distributorBatch.batchId !== 0) {
-              const farmerProduct = await contract.farmerProducts(Number(distributorBatch.originBatchId));
+              originBatchId = Number(distributorBatch.originBatchId);
+              const farmerProduct = await contract.farmerProducts(originBatchId);
               if (farmerProduct.batchId !== 0) {
                 cropName = farmerProduct.cropName || "Unknown Product";
                 location = farmerProduct.location || "Unknown";
@@ -307,7 +330,8 @@ export default function CustomerDashboard({ account }) {
           } catch (err) {
             console.warn("Could not load pack product details:", err);
           }
-
+          const expiryTs = originBatchId ? getFarmerBatchExpiry(originBatchId) : null;
+          const expiryStatus = getExpiryStatus(expiryTs);
           arr.push({
             packId: Number(p.packId),
             distributor: shorten(p.distributor),
@@ -317,6 +341,8 @@ export default function CustomerDashboard({ account }) {
             cropName: (cropName || "").trim(),
             location,
             imageUrls,
+            expiryTimestamp: expiryTs,
+            expiryStatus,
           });
         }
       }
@@ -369,22 +395,33 @@ export default function CustomerDashboard({ account }) {
           Buy from a distributor and enable <b>Wants Retailer Role</b> to become a retailer after distributor approval.
         </p>
 
-        {publicPacks.length === 0 ? (
+        {publicPacks.filter((p) => !p.expiryStatus?.expired).length === 0 ? (
           <div className="empty-state">
             <p>No public distributor packs available.</p>
           </div>
         ) : (
           <div className="products-grid">
-            {publicPacks.map((p) => {
+            {publicPacks.filter((p) => !p.expiryStatus?.expired).map((p) => {
               const displayName =
                 (p.cropName || "").trim() || `Product (Pack #${p.packId})`;
               return (
               <div key={p.packId} className="product-card">
                 <div className="product-header">
                   <h4>{displayName}</h4>
-                  <span className="unit-badge">Pack #{p.packId}</span>
+                  <div className="badges-row">
+                    <span className="unit-badge">Pack #{p.packId}</span>
+                    {p.expiryStatus?.label && !p.expiryStatus?.expired && (
+                      <span className="expiry-badge expiring">{p.expiryStatus.label}</span>
+                    )}
+                  </div>
                 </div>
                 <div className="product-details">
+                  {p.expiryStatus?.expiryDate && !p.expiryStatus?.expired && (
+                    <div className="detail-row">
+                      <span className="label">📅 Valid until:</span>
+                      <span className="value">{p.expiryStatus.expiryDate}</span>
+                    </div>
+                  )}
                   {p.imageUrls?.[0] && (
                     <div className="detail-row">
                       <img
@@ -454,10 +491,16 @@ export default function CustomerDashboard({ account }) {
             <label>&nbsp;</label>
             <button
               onClick={createBuyRequest}
-              disabled={!buyRequestForm.packId || !buyRequestForm.qty}
+              disabled={
+                !buyRequestForm.packId ||
+                !buyRequestForm.qty ||
+                publicPacks.find((x) => String(x.packId) === String(buyRequestForm.packId))?.expiryStatus?.expired === true
+              }
               className="btn-primary"
             >
-              📝 Create Buy Request
+              {publicPacks.find((x) => String(x.packId) === String(buyRequestForm.packId))?.expiryStatus?.expired
+                ? "Pack Expired"
+                : "📝 Create Buy Request"}
             </button>
           </div>
         </div>
@@ -470,13 +513,13 @@ export default function CustomerDashboard({ account }) {
           <button onClick={loadAvailableUnits} className="refresh-button">🔄 Refresh</button>
         </div>
         
-        {availableUnits.length === 0 ? (
+        {availableUnits.filter((u) => !u.expiryStatus?.expired).length === 0 ? (
           <div className="empty-state">
             <p>No products available at the moment.</p>
           </div>
         ) : (
           <div className="products-grid">
-            {availableUnits.map((u) => (
+            {availableUnits.filter((u) => !u.expiryStatus?.expired).map((u) => (
               <ProductCard 
                 key={u.unitId} 
                 unit={u} 

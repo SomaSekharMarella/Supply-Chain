@@ -127,6 +127,17 @@
   color: var(--primary-green);
 }
 
+.trace-validity {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.trace-validity.expired {
+  color: #b91c1c;
+  font-weight: var(--weight-medium);
+}
+
 .trace-price-box {
   background: #f6fbf8;
   border-radius: 16px;

@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from "react";
 import { getContractInstance } from "../Contract";
 import { encodeImageCids, getProductImageUrls, uploadImagesToFilebase } from "../utils/ipfs";
+import { saveFarmerBatchExpiry, getFarmerBatchExpiry, getExpiryStatus, computeExpiryFromShelfLifeDays } from "../utils/expiry";
 import "../styles/FarmerDashboard.css";
 
 export default function FarmerDashboard({ account, roleId }) {
@@ -33,20 +34,27 @@ export default function FarmerDashboard({ account, roleId }) {
       const contract = await getContractInstance(true);
       const products = await contract.getMyProducts();
       
-      const mapped = products.map((p) => ({
-        batchId: Number(p.batchId),
-        cropName: p.cropName,
-        cropPeriod: p.cropPeriod,
-        daysToHarvest: Number(p.daysToHarvest),
-        quantityKg: Number(p.quantityKg),
-        pricePerKg: Number(p.pricePerKg),
-        location: p.location,
-        visibility: Number(p.visibility) === 1 ? "Public" : "Private",
-        ipfsHash: p.ipfsHash,
-        imageUrls: getProductImageUrls(p.ipfsHash),
-        createdAt: Number(p.createdAt),
-        active: p.active,
-      }));
+      const mapped = products.map((p) => {
+        const batchId = Number(p.batchId);
+        const expiryTs = getFarmerBatchExpiry(batchId);
+        const expiryStatus = getExpiryStatus(expiryTs);
+        return {
+          batchId,
+          cropName: p.cropName,
+          cropPeriod: p.cropPeriod,
+          daysToHarvest: Number(p.daysToHarvest),
+          quantityKg: Number(p.quantityKg),
+          pricePerKg: Number(p.pricePerKg),
+          location: p.location,
+          visibility: Number(p.visibility) === 1 ? "Public" : "Private",
+          ipfsHash: p.ipfsHash,
+          imageUrls: getProductImageUrls(p.ipfsHash),
+          createdAt: Number(p.createdAt),
+          active: p.active,
+          expiryTimestamp: expiryTs,
+          expiryStatus,
+        };
+      });
       
       setMyProducts(mapped);
     } catch (err) {
@@ -83,6 +91,11 @@ export default function FarmerDashboard({ account, roleId }) {
       const imageCids = await uploadImagesToFilebase(imageFiles);
       const storedImageValue = encodeImageCids(imageCids);
 
+      const shelfLifeDays = form.shelfLife?.value ? Number(form.shelfLife.value) : null;
+      const expiryTimestamp = shelfLifeDays != null && shelfLifeDays >= 1
+        ? computeExpiryFromShelfLifeDays(shelfLifeDays)
+        : null;
+
       const tx = await contract.addProduct(
         form.crop.value,
         form.period.value,
@@ -95,6 +108,10 @@ export default function FarmerDashboard({ account, roleId }) {
       );
 
       await tx.wait();
+      if (expiryTimestamp != null) {
+        const total = Number(await contract.totalFarmerProducts());
+        saveFarmerBatchExpiry(total, expiryTimestamp);
+      }
       alert("✅ Product added successfully!");
       form.reset();
       
@@ -222,6 +239,19 @@ export default function FarmerDashboard({ account, roleId }) {
 
             <div className="form-row">
               <div className="form-group">
+                <label htmlFor="shelfLife">Shelf Life (days) *</label>
+                <input
+                  id="shelfLife"
+                  name="shelfLife"
+                  type="number"
+                  min="1"
+                  placeholder="e.g. 30"
+                  required
+                  className="form-input"
+                  title="Product validity in days from today"
+                />
+              </div>
+              <div className="form-group">
                 <label htmlFor="visibility">Visibility *</label>
                 <select
                   id="visibility"
@@ -233,6 +263,9 @@ export default function FarmerDashboard({ account, roleId }) {
                   <option value="0">🔒 Private</option>
                 </select>
               </div>
+            </div>
+
+            <div className="form-row">
               <div className="form-group">
                 <label htmlFor="images">Product Images (1 to 3) *</label>
                 <input
@@ -278,9 +311,19 @@ export default function FarmerDashboard({ account, roleId }) {
                 <div key={product.batchId} className="product-card">
                   <div className="product-header">
                     <h4>{product.cropName}</h4>
-                    <span className={`status-badge ${product.active ? "active" : "inactive"}`}>
-                      {product.active ? "Active" : "Inactive"}
-                    </span>
+                    <div className="badges-row">
+                      <span className={`status-badge ${product.active ? "active" : "inactive"}`}>
+                        {product.active ? "Active" : "Inactive"}
+                      </span>
+                      {product.expiryStatus?.label && (
+                        <span className={`expiry-badge ${product.expiryStatus.expired ? "expired" : "expiring"}`}>
+                          {product.expiryStatus.expired ? "Expired" : product.expiryStatus.label}
+                        </span>
+                      )}
+                      {product.expiryStatus?.expiryDate && !product.expiryStatus.expired && (
+                        <span className="expiry-date">Valid until {product.expiryStatus.expiryDate}</span>
+                      )}
+                    </div>
                   </div>
                   <div className="product-details">
                     <div className="detail-row">
@@ -340,6 +383,14 @@ export default function FarmerDashboard({ account, roleId }) {
                         {new Date(product.createdAt * 1000).toLocaleDateString()}
                       </span>
                     </div>
+                    {product.expiryTimestamp != null && (
+                      <div className="detail-row">
+                        <span className="label">Validity:</span>
+                        <span className="value">
+                          {product.expiryStatus?.expiryDate ?? "—"} {product.expiryStatus?.expired ? "(Expired)" : ""}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
